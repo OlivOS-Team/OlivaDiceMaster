@@ -1,0 +1,17 @@
+{
+    "name" : "OlivaDice大师模块",
+    "author" : "lunzhiPenxil",
+    "namespace" : "OlivaDiceMaster",
+    "message_mode" : "old_string",
+    "version" : "3.0.0",
+    "svn" : 1,
+    "compatible_svn" : 81,
+    "priority" : 30020,
+    "support" : [
+        {
+            "sdk" : "all",
+            "platform" : "all",
+            "model" : "all"
+        }
+    ]
+}
