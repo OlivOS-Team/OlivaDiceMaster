@@ -63,11 +63,13 @@ def releaseDir(dir_path):
 def releaseToDir(dir_path):
     tmp_path_list = dir_path.rstrip('/').split('/')
     for tmp_path_list_index in range(len(tmp_path_list)):
-        releaseDir('/'.join(tmp_path_list[:tmp_path_list_index + 1]))
+        if tmp_path_list[tmp_path_list_index] != '':
+        	releaseDir('/'.join(tmp_path_list[:tmp_path_list_index + 1]))
 
 def releaseToDirForFile(dir_path):
     tmp_path_list = dir_path.rstrip('/').split('/')
     if len(tmp_path_list) > 0:
         tmp_path_list = tmp_path_list[:-1]
     for tmp_path_list_index in range(len(tmp_path_list)):
-        releaseDir('/'.join(tmp_path_list[:tmp_path_list_index + 1]))
+        if tmp_path_list[tmp_path_list_index] != '':
+        	releaseDir('/'.join(tmp_path_list[:tmp_path_list_index + 1]))

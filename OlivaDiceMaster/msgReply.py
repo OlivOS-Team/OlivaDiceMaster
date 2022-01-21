@@ -283,6 +283,7 @@ def unity_reply(plugin_event, Proc):
                                                 tmp_omodel_ver_compare,
                                                 tmp_omodel_ver_target
                                             )
+                                            flag_done_this = True
                                             while tmp_omodel_ver_compare in ['=>']:
                                                 flag_download = False
                                                 flag_copy = False
@@ -297,6 +298,7 @@ def unity_reply(plugin_event, Proc):
                                                     tmp_reply_str = dictStrCustom['strMasterOopmDownloadFailed'].format(**dictTValue)
                                                     replyMsg(plugin_event, tmp_reply_str)
                                                     flag_done = False
+                                                    flag_done_this = False
                                                     break
                                                 try:
                                                     shutil.copyfile(
@@ -310,6 +312,7 @@ def unity_reply(plugin_event, Proc):
                                                     tmp_reply_str = dictStrCustom['strMasterOopmCopyFailed'].format(**dictTValue)
                                                     replyMsg(plugin_event, tmp_reply_str)
                                                     flag_done = False
+                                                    flag_done_this = False
                                                     break
                                                 tmp_reply_str = dictStrCustom['strMasterOopmUpdate'].format(**dictTValue)
                                                 replyMsg(plugin_event, tmp_reply_str)
@@ -321,12 +324,14 @@ def unity_reply(plugin_event, Proc):
                                             elif tmp_omodel_ver_compare in ['[DEV]=×']:
                                                 tmp_reply_str = dictStrCustom['strMasterOopmUpdateNotSkipDev'].format(**dictTValue)
                                                 replyMsg(plugin_event, tmp_reply_str)
+                                            if not flag_done_this:
+                                                break
                         if flag_done and flag_need_done:
                             tmp_reply_str = dictStrCustom['strMasterOopmUpdateAllDone'].format(**dictTValue)
                             replyMsg(plugin_event, tmp_reply_str)
                             time.sleep(1)
                             Proc.set_restart()
-                        elif not flag_need_done:
+                        elif flag_done and not flag_need_done:
                             tmp_reply_str = dictStrCustom['strMasterOopmUpdateNotNeed'].format(**dictTValue)
                             replyMsg(plugin_event, tmp_reply_str)
                 elif flag_api_ok:
