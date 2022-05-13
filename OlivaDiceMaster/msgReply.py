@@ -340,4 +340,29 @@ def unity_reply(plugin_event, Proc):
                 else:
                     tmp_reply_str = dictStrCustom['strMasterOopmApiFailed'].format(**dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
+            elif isMatchWordStart(tmp_reast_str, 'list', fullMatch = True):
+                tmp_api_data = OlivaDiceMaster.webTool.GETHttpJson2Dict(
+                    OlivaDiceMaster.data.OlivaDiceMaster_oopm_host
+                )
+                if tmp_api_data != None:
+                    tmp_model_list = []
+                    if 'model' in tmp_api_data:
+                        for tmp_api_data_model_this in tmp_api_data['model']:
+                            tmp_api_data_model = tmp_api_data['model'][tmp_api_data_model_this]
+                            tmp_api_data_model_branch = 'main'
+                            if 'command' in tmp_api_data_model[tmp_api_data_model_branch]:
+                                tmp_model_list.append(
+                                    '[%s] - %s(%s)' % (
+                                        tmp_api_data_model[tmp_api_data_model_branch]['command'],
+                                        str(tmp_api_data_model[tmp_api_data_model_branch]['version']),
+                                        str(tmp_api_data_model[tmp_api_data_model_branch]['svn'])
+                                    )
+                                )
+                    tmp_reply_str_1 = '可选模块如下:\n%s' % '\n'.join(tmp_model_list)
+                    dictTValue['tMasterResult'] = tmp_reply_str_1
+                    tmp_reply_str = dictStrCustom['strMasterReply'].format(**dictTValue)
+                    replyMsg(plugin_event, tmp_reply_str)
+                else:
+                    tmp_reply_str = dictStrCustom['strMasterOopmApiFailed'].format(**dictTValue)
+                    replyMsg(plugin_event, tmp_reply_str)
             return

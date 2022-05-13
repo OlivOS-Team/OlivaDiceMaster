@@ -56,4 +56,13 @@ OlivaDice大师模块
 
     'OlivaDiceMaster更新': '''[OlivaDiceMaster]
 3.0.0: 指令更新''',
+
+    'oopm': '''青果包管理:
+本指令可以用于远程更新插件
+.oopm update 自动检查并更新全部插件
+.oopm update [插件名称] 更新特定插件
+.oopm show [插件名称] 检查插件更新状态
+.oopm list 查看所有可选模块''',
+
+    '指令更新': '&oopm'
 }
