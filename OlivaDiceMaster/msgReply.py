@@ -37,6 +37,7 @@ def unity_reply(plugin_event, Proc):
     dictGValue = OlivaDiceCore.msgCustom.dictGValue
     dictTValue.update(dictGValue)
 
+    sendMsgByEvent = OlivaDiceCore.msgReply.sendMsgByEvent
     replyMsg = OlivaDiceCore.msgReply.replyMsg
     isMatchWordStart = OlivaDiceCore.msgReply.isMatchWordStart
     getMatchWordStartRight = OlivaDiceCore.msgReply.getMatchWordStartRight
@@ -435,4 +436,77 @@ def unity_reply(plugin_event, Proc):
                 else:
                     tmp_reply_str = dictStrCustom['strMasterOopmApiFailed'].format(**dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
+            return
+        elif flag_is_from_master and isMatchWordStart(tmp_reast_str, 'send'):
+            tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'send')
+            tmp_reast_str = skipSpaceStart(tmp_reast_str)
+            flag_target_type = None
+            tmp_send_result = tmp_reast_str
+            tmp_target_host_id = None
+            tmp_target_id = None
+            if isMatchWordStart(tmp_reast_str, 'user'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'user')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                flag_target_type = 'private'
+            if isMatchWordStart(tmp_reast_str, 'group'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'group')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                flag_target_type = 'group'
+            if flag_target_type != None:
+                tmp_reast_str_list = tmp_reast_str.split(' ')
+                if len(tmp_reast_str_list) >= 2:
+                    tmp_reast_str_list_0_list = tmp_reast_str_list[0].split('|')
+                    if len(tmp_reast_str_list_0_list) == 1:
+                        tmp_target_id = str(tmp_reast_str_list_0_list[0])
+                    elif len(tmp_reast_str_list_0_list) == 2:
+                        tmp_target_host_id = str(tmp_reast_str_list_0_list[0])
+                        tmp_target_id = str(tmp_reast_str_list_0_list[1])
+                    tmp_send_result = ' '.join(tmp_reast_str_list[1:])
+            if tmp_target_id != None:
+                dictTValue['tResult'] = tmp_send_result
+                tmp_reply_str = dictStrCustom['strMasterSendFromMaster'].format(**dictTValue)
+                sendMsgByEvent(
+                    plugin_event,
+                    tmp_reply_str,
+                    tmp_target_id,
+                    flag_target_type,
+                    host_id = tmp_target_host_id
+                )
+            else:
+                tmp_reply_str = tmp_send_result
+                replyMsg(plugin_event, tmp_reply_str)
+            return
+        elif isMatchWordStart(tmp_reast_str, 'send'):
+            tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'send')
+            tmp_reast_str = skipSpaceStart(tmp_reast_str)
+            tmp_send_result = tmp_reast_str
+            tmp_botHash = plugin_event.bot_info.hash
+            tmp_hostId = None
+            if 'host_id' in plugin_event.data.__dict__:
+                tmp_hostId = plugin_event.data.host_id
+            if tmp_botHash in OlivaDiceCore.console.dictConsoleSwitch:
+                if 'masterList' in OlivaDiceCore.console.dictConsoleSwitch[tmp_botHash]:
+                    for master_this in OlivaDiceCore.console.dictConsoleSwitch[tmp_botHash]['masterList']:
+                        if master_this[1] == plugin_event.platform['platform']:
+                            if flag_is_from_group:
+                                dictTValue['tGroupName'] = '群'
+                                dictTValue['tGroupId'] = str(tmp_hagID)
+                            else:
+                                dictTValue['tGroupName'] = '私聊'
+                                dictTValue['tGroupId'] = '-'
+                            dictTValue['tUserName'] = '用户'
+                            if 'name' in plugin_event.data.sender:
+                                dictTValue['tUserName'] = plugin_event.data.sender['name']
+                            dictTValue['tUserId'] = str(plugin_event.data.user_id)
+                            dictTValue['tResult'] = tmp_send_result
+                            tmp_reply_str = dictStrCustom['strMasterSendToMaster'].format(**dictTValue)
+                            sendMsgByEvent(
+                                plugin_event,
+                                tmp_reply_str,
+                                str(master_this[0]),
+                                'private',
+                                host_id = tmp_hostId
+                            )
+            tmp_reply_str = dictStrCustom['strMasterSendToMasterAlready'].format(**dictTValue)
+            replyMsg(plugin_event, tmp_reply_str)
             return

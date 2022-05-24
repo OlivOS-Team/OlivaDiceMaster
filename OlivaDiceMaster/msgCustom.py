@@ -35,7 +35,10 @@ dictStrCustom = {
     'strMasterOopmGetNone': '{tMasterOopkNameList}\n模块不存在，请先使用[.oopm list]指令查看受支持的模块',
     'strMasterOopmGetSkipSrc': '{tMasterOopkNameList}\n模块为手动部署模式，已跳过',
     'strMasterOopmDownloadFailed': '{tMasterOopkNameList}\n模块下载失败',
-    'strMasterOopmCopyFailed': '{tMasterOopkNameList}\n模块安装失败'
+    'strMasterOopmCopyFailed': '{tMasterOopkNameList}\n模块安装失败',
+    'strMasterSendFromMaster': '来自Master的消息：\n{tResult}',
+    'strMasterSendToMaster': '[{tGroupName}]({tGroupId})中[{tUserName}]({tUserId})发来的消息：\n{tResult}',
+    'strMasterSendToMasterAlready': '已将消息发送至Master'
 }
 
 dictStrConst = {
@@ -58,7 +61,8 @@ OlivaDice大师模块
 注: 本模块为可选重要模块。''',
 
     'OlivaDiceMaster更新': '''[OlivaDiceMaster]
-3.0.3: 模块获取
+3.0.3: 反馈发送
+3.0.2: 模块获取
 3.0.0: 指令更新''',
 
     'oopm': '''青果包管理:
@@ -69,5 +73,14 @@ OlivaDice大师模块
 .oopm list 查看所有可选模块
 .oopm get [插件名称] 获取所选模块''',
 
-    '指令更新': '&oopm'
+    'send': '''send反馈发送:
+对于普通用户
+.send [反馈消息] 发送反馈消息给Master
+
+对于骰主
+.send [回复消息] 发送消息到当前窗口
+.send (user/group) [ID] [回复消息] 发送消息到指定窗口''',
+
+    '指令更新': '&oopm',
+    '反馈发送': '&send'
 }
