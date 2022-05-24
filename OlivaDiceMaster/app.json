@@ -3,8 +3,8 @@
     "author" : "lunzhiPenxil",
     "namespace" : "OlivaDiceMaster",
     "message_mode" : "old_string",
-    "version" : "3.0.2",
-    "svn" : 3,
+    "version" : "3.0.3",
+    "svn" : 4,
     "compatible_svn" : 95,
     "priority" : 30020,
     "support" : [

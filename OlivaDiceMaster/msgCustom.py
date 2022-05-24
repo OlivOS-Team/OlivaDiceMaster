@@ -31,6 +31,9 @@ dictStrCustom = {
     'strMasterOopmUpdateNotNeed': '所有模块已为最新版本，无需更新',
     'strMasterOopmUpdateNotSkipSrc': '{tMasterOopkNameList}\n模块为手动部署模式，已跳过',
     'strMasterOopmUpdateNotSkipDev': '{tMasterOopkNameList}\n模块为开发模式，已跳过',
+    'strMasterOopmGet': '{tMasterOopkNameList}\n模块已安装成功，请使用[.system restart]应用安装',
+    'strMasterOopmGetNone': '{tMasterOopkNameList}\n模块不存在，请先使用[.oopm list]指令查看受支持的模块',
+    'strMasterOopmGetSkipSrc': '{tMasterOopkNameList}\n模块为手动部署模式，已跳过',
     'strMasterOopmDownloadFailed': '{tMasterOopkNameList}\n模块下载失败',
     'strMasterOopmCopyFailed': '{tMasterOopkNameList}\n模块安装失败'
 }
@@ -55,6 +58,7 @@ OlivaDice大师模块
 注: 本模块为可选重要模块。''',
 
     'OlivaDiceMaster更新': '''[OlivaDiceMaster]
+3.0.3: 模块获取
 3.0.0: 指令更新''',
 
     'oopm': '''青果包管理:
@@ -62,7 +66,8 @@ OlivaDice大师模块
 .oopm update 自动检查并更新全部插件
 .oopm update [插件名称] 更新特定插件
 .oopm show [插件名称] 检查插件更新状态
-.oopm list 查看所有可选模块''',
+.oopm list 查看所有可选模块
+.oopm get [插件名称] 获取所选模块''',
 
     '指令更新': '&oopm'
 }

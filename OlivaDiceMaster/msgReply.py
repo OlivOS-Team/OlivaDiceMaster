@@ -365,4 +365,74 @@ def unity_reply(plugin_event, Proc):
                 else:
                     tmp_reply_str = dictStrCustom['strMasterOopmApiFailed'].format(**dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
+            elif isMatchWordStart(tmp_reast_str, 'get'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'get')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                tmp_reast_str = tmp_reast_str.rstrip(' ')
+                tmp_get_model_name = tmp_reast_str
+                tmp_api_data = OlivaDiceMaster.webTool.GETHttpJson2Dict(
+                    OlivaDiceMaster.data.OlivaDiceMaster_oopm_host
+                )
+                if tmp_api_data != None:
+                    if 'model' in tmp_api_data:
+                        flag_need_update = False
+                        for tmp_api_data_model_this in tmp_api_data['model']:
+                            tmp_api_data_model = tmp_api_data['model'][tmp_api_data_model_this]
+                            tmp_api_data_model_branch = 'main'
+                            if 'command' in tmp_api_data_model[tmp_api_data_model_branch]:
+                                tmp_api_model_name = tmp_api_data_model[tmp_api_data_model_branch]['command']
+                                if tmp_get_model_name.lower() == tmp_api_model_name.lower():
+                                    flag_download = False
+                                    flag_copy = False
+                                    tmp_download_tmp_path = '%s/unity/update/%s.opk' % (
+                                        OlivaDiceCore.data.dataDirRoot,
+                                        tmp_api_model_name
+                                    )
+                                    tmp_oopm_target_path = './plugin/app/%s.opk' % tmp_api_model_name
+                                    dictTValue['tMasterOopkNameList'] = tmp_api_data_model_this
+                                    if 'version' in tmp_api_data_model[tmp_api_data_model_branch]:
+                                        dictTValue['tMasterOopkNameList'] += ' ' + str(tmp_api_data_model[tmp_api_data_model_branch]['version'])
+                                    if 'svn' in tmp_api_data_model[tmp_api_data_model_branch]:
+                                        dictTValue['tMasterOopkNameList'] += '(' + str(tmp_api_data_model[tmp_api_data_model_branch]['svn']) + ')'
+                                    if os.path.exists(tmp_oopm_target_path[:-4]):
+                                        tmp_reply_str = dictStrCustom['strMasterOopmGetSkipSrc'].format(**dictTValue)
+                                        replyMsg(plugin_event, tmp_reply_str)
+                                        return
+                                    if 'opk_path' in tmp_api_data_model[tmp_api_data_model_branch]:
+                                        tmp_omodel_ver_target_opk_path = tmp_api_data_model[tmp_api_data_model_branch]['opk_path']
+                                        flag_download = OlivaDiceMaster.webTool.GETHttpFile(
+                                            tmp_omodel_ver_target_opk_path,
+                                            tmp_download_tmp_path
+                                        )
+                                    if not flag_download:
+                                        tmp_reply_str = dictStrCustom['strMasterOopmDownloadFailed'].format(**dictTValue)
+                                        replyMsg(plugin_event, tmp_reply_str)
+                                        flag_done = False
+                                        flag_done_this = False
+                                        return
+                                    try:
+                                        shutil.copyfile(
+                                            tmp_download_tmp_path,
+                                            tmp_oopm_target_path
+                                        )
+                                        flag_copy = True
+                                    except:
+                                        flag_copy = False
+                                    if not flag_copy:
+                                        tmp_reply_str = dictStrCustom['strMasterOopmCopyFailed'].format(**dictTValue)
+                                        replyMsg(plugin_event, tmp_reply_str)
+                                        flag_done = False
+                                        flag_done_this = False
+                                        return
+                                    tmp_reply_str = dictStrCustom['strMasterOopmGet'].format(**dictTValue)
+                                    replyMsg(plugin_event, tmp_reply_str)
+                                    flag_need_update = True
+                        if not flag_need_update:
+                            dictTValue['tMasterOopkNameList'] = tmp_get_model_name
+                            tmp_reply_str = dictStrCustom['strMasterOopmGetNone'].format(**dictTValue)
+                            replyMsg(plugin_event, tmp_reply_str)
+                            return
+                else:
+                    tmp_reply_str = dictStrCustom['strMasterOopmApiFailed'].format(**dictTValue)
+                    replyMsg(plugin_event, tmp_reply_str)
             return
