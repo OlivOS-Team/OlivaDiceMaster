@@ -510,3 +510,102 @@ def unity_reply(plugin_event, Proc):
             tmp_reply_str = dictStrCustom['strMasterSendToMasterAlready'].format(**dictTValue)
             replyMsg(plugin_event, tmp_reply_str)
             return
+        elif isMatchWordStart(tmp_reast_str, 'trust'):
+            tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'trust')
+            flag_data_type = 'trustLevel'
+            flag_target_type = 'user'
+            tmp_userId = None
+            tmp_userTrustVal = None
+            tmp_userPlatform = plugin_event.bot_info.platform['platform']
+            tmp_botHash = plugin_event.bot_info.hash
+            if isMatchWordStart(tmp_reast_str, 'level'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'level')
+                flag_data_type = 'trustLevel'
+            elif isMatchWordStart(tmp_reast_str, 'rank'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'rank')
+                flag_data_type = 'trustRank'
+            if flag_data_type == 'trustLevel':
+                dictTValue['tMasterTrustName'] = '信任等级'
+            elif flag_data_type == 'trustRank':
+                dictTValue['tMasterTrustName'] = '信任评分'
+            tmp_reast_str = skipSpaceStart(tmp_reast_str)
+            if isMatchWordStart(tmp_reast_str, 'user'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'user')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                flag_target_type = 'user'
+            elif isMatchWordStart(tmp_reast_str, 'group'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'group')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                flag_target_type = 'group'
+            elif isMatchWordStart(tmp_reast_str, 'host'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'host')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                flag_target_type = 'host'
+            if flag_is_from_master:
+                tmp_reast_str = tmp_reast_str.strip(' ')
+                tmp_reast_str_list = tmp_reast_str.split(' ')
+                tmp_reast_str_list_len = len(tmp_reast_str_list)
+                if tmp_reast_str_list_len > 1:
+                    tmp_userId = tmp_reast_str_list[0]
+                    try:
+                        tmp_userTrustVal = int(tmp_reast_str_list[-1])
+                    except:
+                        tmp_userTrustVal = None
+                elif tmp_reast_str_list_len == 1:
+                    tmp_userId = tmp_reast_str_list[0]
+                if tmp_userId == '':
+                    tmp_userId = None
+            if tmp_userId == None or tmp_userId == 'this':
+                if flag_target_type == 'user':
+                    tmp_userId = plugin_event.data.user_id
+                elif flag_target_type == 'group':
+                    if 'group_id' in plugin_event.data.__dict__:
+                        tmp_userId = plugin_event.data.group_id
+                elif flag_target_type == 'host':
+                    if 'host_id' in plugin_event.data.__dict__:
+                        tmp_userId = plugin_event.data.host_id
+            if tmp_userId != None:
+                tmp_userHash = OlivaDiceCore.userConfig.getUserHash(
+                    userId = tmp_userId,
+                    userType = flag_target_type,
+                    platform = tmp_userPlatform
+                )
+                tmp_userId_new = OlivaDiceCore.userConfig.getUserDataByKeyWithHash(
+                    userHash = tmp_userHash,
+                    userDataKey = 'userId',
+                    botHash = tmp_botHash
+                )
+                dictTValue['tId'] = tmp_userId
+                if flag_target_type == 'user':
+                    dictTValue['tName'] = OlivaDiceCore.userConfig.getUserConfigByKeyWithHash(
+                        userHash = tmp_userHash,
+                        userConfigKey = 'userName',
+                        botHash = tmp_botHash
+                    )
+                elif flag_target_type == 'group':
+                    dictTValue['tName'] = '群'
+                elif flag_target_type == 'host':
+                    dictTValue['tName'] = '频道'
+                if tmp_userTrustVal != None:
+                    OlivaDiceCore.userConfig.setUserConfigByKey(
+                        userId = tmp_userId,
+                        userType = flag_target_type,
+                        platform = tmp_userPlatform,
+                        userConfigKey = flag_data_type,
+                        userConfigValue = tmp_userTrustVal,
+                        botHash = tmp_botHash
+                    )
+                    OlivaDiceCore.userConfig.writeUserConfigByUserHash(tmp_userHash)
+                    dictTValue['tResult'] = str(tmp_userTrustVal)
+                    tmp_reply_str = dictStrCustom['strMasterTrustSet'].format(**dictTValue)
+                    replyMsg(plugin_event, tmp_reply_str)
+                else:
+                    tmp_userTrustVal = OlivaDiceCore.userConfig.getUserConfigByKeyWithHash(
+                        userHash = tmp_userHash,
+                        userConfigKey = flag_data_type,
+                        botHash = tmp_botHash
+                    )
+                    dictTValue['tResult'] = str(tmp_userTrustVal)
+                    tmp_reply_str = dictStrCustom['strMasterTrustGet'].format(**dictTValue)
+                    replyMsg(plugin_event, tmp_reply_str)
+            return

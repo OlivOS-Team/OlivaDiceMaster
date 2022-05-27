@@ -38,7 +38,9 @@ dictStrCustom = {
     'strMasterOopmCopyFailed': '{tMasterOopkNameList}\n模块安装失败',
     'strMasterSendFromMaster': '来自Master的消息：\n{tResult}',
     'strMasterSendToMaster': '[{tGroupName}]({tGroupId})中[{tUserName}]({tUserId})发来的消息：\n{tResult}',
-    'strMasterSendToMasterAlready': '已将消息发送至Master'
+    'strMasterSendToMasterAlready': '已将消息发送至Master',
+    'strMasterTrustSet': '[{tName}]({tId})的{tMasterTrustName}已设置为：{tResult}',
+    'strMasterTrustGet': '[{tName}]({tId})的{tMasterTrustName}为：{tResult}'
 }
 
 dictStrConst = {
@@ -49,7 +51,8 @@ dictGValue = {
 
 dictTValue = {
     'tMasterResult': 'N/A',
-    'tMasterOopkNameList': 'N/A'
+    'tMasterOopkNameList': 'N/A',
+    'tMasterTrustName': '无名信任'
 }
 
 dictHelpDocTemp = {
