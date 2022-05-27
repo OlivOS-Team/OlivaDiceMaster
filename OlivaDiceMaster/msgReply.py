@@ -561,6 +561,8 @@ def unity_reply(plugin_event, Proc):
                 elif flag_target_type == 'group':
                     if 'group_id' in plugin_event.data.__dict__:
                         tmp_userId = plugin_event.data.group_id
+                        if 'host_id' in plugin_event.data.__dict__:
+                            tmp_userId = str(plugin_event.data.host_id) + '|' + str(tmp_userId)
                 elif flag_target_type == 'host':
                     if 'host_id' in plugin_event.data.__dict__:
                         tmp_userId = plugin_event.data.host_id
