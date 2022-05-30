@@ -40,7 +40,13 @@ dictStrCustom = {
     'strMasterSendToMaster': '[{tGroupName}]({tGroupId})中[{tUserName}]({tUserId})发来的消息：\n{tResult}',
     'strMasterSendToMasterAlready': '已将消息发送至Master',
     'strMasterTrustSet': '[{tName}]({tId})的{tMasterTrustName}已设置为：{tResult}',
-    'strMasterTrustGet': '[{tName}]({tId})的{tMasterTrustName}为：{tResult}'
+    'strMasterTrustGet': '[{tName}]({tId})的{tMasterTrustName}为：{tResult}',
+    'strMasterPlatformNo': '该功能在此平台不受支持',
+    'strMasterGroupClearShow': '已检查[{tMasterCount01}]个群:\n{tResult}\n已经决定清除[{tMasterCount02}]个群\n请使用[.group clear do (天数)]指令执行这项操作',
+    'strMasterGroupClearDoUnit': '已经清除群:\n{tResult}',
+    'strMasterGroupClearDoUnitSend': '检测到在此处最后发言为{tResult}，即将自动退出',
+    'strMasterGroupClearDo': '已检查[{tMasterCount01}]个群\n已经清除[{tMasterCount02}]个群',
+    'strMasterGroupClearUnit': '[{tName}] - ({tId}): {tResult}'
 }
 
 dictStrConst = {
@@ -52,7 +58,9 @@ dictGValue = {
 dictTValue = {
     'tMasterResult': 'N/A',
     'tMasterOopkNameList': 'N/A',
-    'tMasterTrustName': '无名信任'
+    'tMasterTrustName': '无名信任',
+    'tMasterCount01': 'N/A',
+    'tMasterCount02': 'N/A'
 }
 
 dictHelpDocTemp = {

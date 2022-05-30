@@ -15,9 +15,9 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 '''
 
 import OlivaDiceCore
-import OlivaDiceMaster.main
-import OlivaDiceMaster.msgReply
-import OlivaDiceMaster.msgCustom
-import OlivaDiceMaster.msgCustomManager
-import OlivaDiceMaster.data
-import OlivaDiceMaster.webTool
+from . import main
+from . import msgReply
+from . import msgCustom
+from . import msgCustomManager
+from . import data
+from . import webTool

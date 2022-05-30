@@ -611,3 +611,152 @@ def unity_reply(plugin_event, Proc):
                     tmp_reply_str = dictStrCustom['strMasterTrustGet'].format(**dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
             return
+        elif flag_is_from_master and isMatchWordStart(tmp_reast_str, 'group'):
+            tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'group')
+            tmp_reast_str = skipSpaceStart(tmp_reast_str)
+            flag_action = None
+            flag_action_next = None
+            flag_clear_gate = 60 * 60 * 24 * 30
+            flag_clear_trustLevel_gate = 2
+            if isMatchWordStart(tmp_reast_str, 'clear'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'clear')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                flag_action = 'clear'
+                flag_action_next = 'show'
+            if flag_action == 'clear' and isMatchWordStart(tmp_reast_str, 'show'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'show')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                flag_action_next = 'show'
+            elif flag_action == 'clear' and isMatchWordStart(tmp_reast_str, 'do'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'do')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                flag_action_next = 'do'
+            if flag_action =='clear' and flag_action_next != None:
+                tmp_reast_str.rstrip(' ')
+                if len(tmp_reast_str) > 0:
+                    if tmp_reast_str.isdigit():
+                        flag_clear_gate = 60 * 60 * 24 * int(tmp_reast_str)
+                tmp_group_list = []
+                res = None
+                tmp_userPlatform = plugin_event.bot_info.platform['platform']
+                tmp_botHash = plugin_event.bot_info.hash
+                if tmp_userPlatform in [
+                    'qq',
+                    'telegram'
+                ]:
+                    res = plugin_event.get_group_list()
+                if res != None:
+                    if res['active'] == True:
+                        for group_this in res['data']:
+                            tmp_group_unit = {}
+                            tmp_group_unit['name'] = group_this['name']
+                            tmp_group_unit['id'] = group_this['id']
+                            tmp_group_unit['trustLevel'] = OlivaDiceCore.userConfig.dictUserConfigNoteDefault['trustLevel']
+                            tmp_userLastHit = None
+                            tmp_userHash = OlivaDiceCore.userConfig.getUserHash(
+                                userId = tmp_group_unit['id'],
+                                userType = 'group',
+                                platform = tmp_userPlatform
+                            )
+                            tmp_userId = OlivaDiceCore.userConfig.getUserDataByKeyWithHash(
+                                userHash = tmp_userHash,
+                                userDataKey = 'userId',
+                                botHash = tmp_botHash
+                            )
+                            if tmp_userId != None:
+                                tmp_userLastHit = OlivaDiceCore.userConfig.getUserDataByKeyWithHash(
+                                    userHash = tmp_userHash,
+                                    userDataKey = 'lastHit',
+                                    botHash = tmp_botHash
+                                )
+                                tmp_group_unit['trustLevel'] = OlivaDiceCore.userConfig.getUserConfigByKeyWithHash(
+                                    userHash = tmp_userHash,
+                                    userConfigKey = 'trustLevel',
+                                    botHash = tmp_botHash
+                                )
+                            tmp_group_unit['lastHit'] = tmp_userLastHit
+                            tmp_group_unit['lastHitShow'] = tmp_userLastHit
+                            if tmp_group_unit['lastHit'] == None:
+                                tmp_group_unit['lastHit'] = -1
+                                tmp_group_unit['lastHitShow'] = None
+                            tmp_group_list.append(tmp_group_unit)
+                        tmp_group_list.sort(key = lambda x : x['lastHit'])
+                        tmp_group_list_str = []
+                        tmp_group_list_clear = {}
+                        for group_this in tmp_group_list:
+                            flag_skip = flag_clear_trustLevel_gate <= group_this['trustLevel']
+                            tmp_time = '无记录'
+                            tmp_time_1 = '无记录'
+                            tmp_time_type = '秒'
+                            tmp_time_int_raw = int(time.time()) + 1
+                            if group_this['lastHitShow'] != None:
+                                tmp_time_int = int(time.time()) - group_this['lastHitShow']
+                                tmp_time_int_raw = tmp_time_int
+                                if tmp_time_int >= 60 * 60 * 24:
+                                    tmp_time_int = int(tmp_time_int / (60 * 60 * 24))
+                                    tmp_time_type = '天'
+                                elif tmp_time_int >= 60 * 60:
+                                    tmp_time_int = int(tmp_time_int / (60 * 60))
+                                    tmp_time_type = '小时'
+                                elif tmp_time_int >= 60:
+                                    tmp_time_int = int(tmp_time_int / 60)
+                                    tmp_time_type = '分钟'
+                                tmp_time = '%s%s前' % (
+                                    str(tmp_time_int),
+                                    tmp_time_type
+                                )
+                                tmp_time_1 = '%s%s' % (
+                                    str(tmp_time_int),
+                                    tmp_time_type
+                                )
+                                if flag_skip:
+                                    tmp_time = tmp_time + ' (信任)'
+                            tmp_unit_data = {
+                                'tName': group_this['name'],
+                                'tId': group_this['id'],
+                                'tResult': tmp_time
+                            }
+                            if flag_clear_gate < tmp_time_int_raw:
+                                tmp_strMasterGroupClearUnit = dictStrCustom['strMasterGroupClearUnit'].format(**tmp_unit_data)
+                                tmp_group_list_str.append(
+                                    dictStrCustom['strMasterGroupClearUnit'].format(**tmp_unit_data)
+                                )
+                                if not flag_skip:
+                                    tmp_group_list_clear[str(group_this['id'])] = {
+                                        'show': tmp_strMasterGroupClearUnit,
+                                        'time': tmp_time_1
+                                    }
+                        dictTValue['tMasterCount01'] = str(len(tmp_group_list))
+                        dictTValue['tMasterCount02'] = str(len(tmp_group_list_clear))
+                        dictTValue['tResult'] = '\n'.join(tmp_group_list_str)
+                        if flag_action_next == 'do':
+                            messageSplitDelay = OlivaDiceCore.console.getConsoleSwitchByHash(
+                                'messageSplitDelay',
+                                tmp_botHash
+                            )
+                            for group_this in tmp_group_list_clear:
+                                dictTValue['tResult'] = tmp_group_list_clear[group_this]['time']
+                                tmp_reply_str = dictStrCustom['strMasterGroupClearDoUnitSend'].format(**dictTValue)
+                                sendMsgByEvent(
+                                    plugin_event,
+                                    tmp_reply_str,
+                                    group_this,
+                                    'group',
+                                    host_id = None
+                                )
+                                time.sleep(messageSplitDelay / 1000)
+                                plugin_event.set_group_leave(group_id = group_this, is_dismiss = True)
+                                dictTValue['tResult'] = tmp_group_list_clear[group_this]['show']
+                                tmp_reply_str = dictStrCustom['strMasterGroupClearDoUnit'].format(**dictTValue)
+                                replyMsg(plugin_event, tmp_reply_str)
+                                time.sleep(messageSplitDelay / 1000)
+                            dictTValue['tResult'] = '\n'.join(tmp_group_list_str)
+                            tmp_reply_str = dictStrCustom['strMasterGroupClearDo'].format(**dictTValue)
+                            replyMsg(plugin_event, tmp_reply_str)
+                        elif flag_action_next == 'show':
+                            dictTValue['tResult'] = '\n'.join(tmp_group_list_str)
+                            tmp_reply_str = dictStrCustom['strMasterGroupClearShow'].format(**dictTValue)
+                            replyMsg(plugin_event, tmp_reply_str)
+                else:
+                    tmp_reply_str = dictStrCustom['strMasterPlatformNo'].format(**dictTValue)
+                    replyMsg(plugin_event, tmp_reply_str)
