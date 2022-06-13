@@ -72,6 +72,7 @@ OlivaDice大师模块
 注: 本模块为可选重要模块。''',
 
     'OlivaDiceMaster更新': '''[OlivaDiceMaster]
+3.0.4: 指令清群
 3.0.3: 反馈发送
 3.0.2: 模块获取
 3.0.0: 指令更新''',
@@ -92,6 +93,11 @@ OlivaDice大师模块
 .send [回复消息] 发送消息到当前窗口
 .send (user/group) [ID] [回复消息] 发送消息到指定窗口''',
 
+    'groupclear': '''指令清群:
+.group clear [天数] 查找超过对应天数未触发的多人聊天
+.group clear do [天数] 清理超过对应天数未触发的多人聊天''',
+
     '指令更新': '&oopm',
-    '反馈发送': '&send'
+    '反馈发送': '&send',
+    '指令清群': '&groupclear'
 }
