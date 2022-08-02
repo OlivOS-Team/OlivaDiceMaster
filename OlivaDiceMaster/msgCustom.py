@@ -72,6 +72,7 @@ OlivaDice大师模块
 注: 本模块为可选重要模块。''',
 
     'OlivaDiceMaster更新': '''[OlivaDiceMaster]
+3.0.5: 支持新版OlivOS
 3.0.4: 指令清群
 3.0.3: 反馈发送
 3.0.2: 模块获取
