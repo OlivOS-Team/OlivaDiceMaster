@@ -237,7 +237,7 @@ def unity_reply(plugin_event, Proc):
                             )
                         tmp_reply_str_1 = '\n'.join(tmp_reply_str_1_list)
                         dictTValue['tMasterResult'] = tmp_reply_str_1
-                        tmp_reply_str = dictStrCustom['strMasterReply'].format(**dictTValue)
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterReply'], dictTValue)
                         replyMsg(plugin_event, tmp_reply_str)
                     elif flag_type == 'update':
                         flag_done = True
@@ -296,7 +296,7 @@ def unity_reply(plugin_event, Proc):
                                                 except:
                                                     flag_download = False
                                                 if not flag_download:
-                                                    tmp_reply_str = dictStrCustom['strMasterOopmDownloadFailed'].format(**dictTValue)
+                                                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmDownloadFailed'], dictTValue)
                                                     replyMsg(plugin_event, tmp_reply_str)
                                                     flag_done = False
                                                     flag_done_this = False
@@ -310,36 +310,36 @@ def unity_reply(plugin_event, Proc):
                                                 except:
                                                     flag_copy = False
                                                 if not flag_copy:
-                                                    tmp_reply_str = dictStrCustom['strMasterOopmCopyFailed'].format(**dictTValue)
+                                                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmCopyFailed'], dictTValue)
                                                     replyMsg(plugin_event, tmp_reply_str)
                                                     flag_done = False
                                                     flag_done_this = False
                                                     break
-                                                tmp_reply_str = dictStrCustom['strMasterOopmUpdate'].format(**dictTValue)
+                                                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmUpdate'], dictTValue)
                                                 replyMsg(plugin_event, tmp_reply_str)
                                                 flag_need_done = True
                                                 break
                                             if tmp_omodel_ver_compare in ['[SRC]=×']:
-                                                tmp_reply_str = dictStrCustom['strMasterOopmUpdateNotSkipSrc'].format(**dictTValue)
+                                                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmUpdateNotSkipSrc'], dictTValue)
                                                 replyMsg(plugin_event, tmp_reply_str)
                                             elif tmp_omodel_ver_compare in ['[DEV]=×']:
-                                                tmp_reply_str = dictStrCustom['strMasterOopmUpdateNotSkipDev'].format(**dictTValue)
+                                                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmUpdateNotSkipDev'], dictTValue)
                                                 replyMsg(plugin_event, tmp_reply_str)
                                             if not flag_done_this:
                                                 break
                         if flag_done and flag_need_done:
-                            tmp_reply_str = dictStrCustom['strMasterOopmUpdateAllDone'].format(**dictTValue)
+                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmUpdateAllDone'], dictTValue)
                             replyMsg(plugin_event, tmp_reply_str)
                             time.sleep(1)
                             Proc.set_restart()
                         elif flag_done and not flag_need_done:
-                            tmp_reply_str = dictStrCustom['strMasterOopmUpdateNotNeed'].format(**dictTValue)
+                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmUpdateNotNeed'], dictTValue)
                             replyMsg(plugin_event, tmp_reply_str)
                 elif flag_api_ok:
-                    tmp_reply_str = dictStrCustom['strMasterOopmNotMatch'].format(**dictTValue)
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmNotMatch'], dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
                 else:
-                    tmp_reply_str = dictStrCustom['strMasterOopmApiFailed'].format(**dictTValue)
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmApiFailed'], dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
             elif isMatchWordStart(tmp_reast_str, 'list', fullMatch = True):
                 tmp_api_data = OlivaDiceMaster.webTool.GETHttpJson2Dict(
@@ -361,10 +361,10 @@ def unity_reply(plugin_event, Proc):
                                 )
                     tmp_reply_str_1 = '可选模块如下:\n%s' % '\n'.join(tmp_model_list)
                     dictTValue['tMasterResult'] = tmp_reply_str_1
-                    tmp_reply_str = dictStrCustom['strMasterReply'].format(**dictTValue)
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterReply'], dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
                 else:
-                    tmp_reply_str = dictStrCustom['strMasterOopmApiFailed'].format(**dictTValue)
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmApiFailed'], dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
             elif isMatchWordStart(tmp_reast_str, 'get'):
                 tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'get')
@@ -396,7 +396,7 @@ def unity_reply(plugin_event, Proc):
                                     if 'svn' in tmp_api_data_model[tmp_api_data_model_branch]:
                                         dictTValue['tMasterOopkNameList'] += '(' + str(tmp_api_data_model[tmp_api_data_model_branch]['svn']) + ')'
                                     if os.path.exists(tmp_oopm_target_path[:-4]):
-                                        tmp_reply_str = dictStrCustom['strMasterOopmGetSkipSrc'].format(**dictTValue)
+                                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmGetSkipSrc'], dictTValue)
                                         replyMsg(plugin_event, tmp_reply_str)
                                         return
                                     if 'opk_path' in tmp_api_data_model[tmp_api_data_model_branch]:
@@ -406,7 +406,7 @@ def unity_reply(plugin_event, Proc):
                                             tmp_download_tmp_path
                                         )
                                     if not flag_download:
-                                        tmp_reply_str = dictStrCustom['strMasterOopmDownloadFailed'].format(**dictTValue)
+                                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmDownloadFailed'], dictTValue)
                                         replyMsg(plugin_event, tmp_reply_str)
                                         flag_done = False
                                         flag_done_this = False
@@ -420,21 +420,21 @@ def unity_reply(plugin_event, Proc):
                                     except:
                                         flag_copy = False
                                     if not flag_copy:
-                                        tmp_reply_str = dictStrCustom['strMasterOopmCopyFailed'].format(**dictTValue)
+                                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmCopyFailed'], dictTValue)
                                         replyMsg(plugin_event, tmp_reply_str)
                                         flag_done = False
                                         flag_done_this = False
                                         return
-                                    tmp_reply_str = dictStrCustom['strMasterOopmGet'].format(**dictTValue)
+                                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmGet'], dictTValue)
                                     replyMsg(plugin_event, tmp_reply_str)
                                     flag_need_update = True
                         if not flag_need_update:
                             dictTValue['tMasterOopkNameList'] = tmp_get_model_name
-                            tmp_reply_str = dictStrCustom['strMasterOopmGetNone'].format(**dictTValue)
+                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmGetNone'], dictTValue)
                             replyMsg(plugin_event, tmp_reply_str)
                             return
                 else:
-                    tmp_reply_str = dictStrCustom['strMasterOopmApiFailed'].format(**dictTValue)
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmApiFailed'], dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
             return
         elif flag_is_from_master and isMatchWordStart(tmp_reast_str, 'send'):
@@ -464,7 +464,7 @@ def unity_reply(plugin_event, Proc):
                     tmp_send_result = ' '.join(tmp_reast_str_list[1:])
             if tmp_target_id != None:
                 dictTValue['tResult'] = tmp_send_result
-                tmp_reply_str = dictStrCustom['strMasterSendFromMaster'].format(**dictTValue)
+                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterSendFromMaster'], dictTValue)
                 sendMsgByEvent(
                     plugin_event,
                     tmp_reply_str,
@@ -499,7 +499,7 @@ def unity_reply(plugin_event, Proc):
                                 dictTValue['tUserName'] = plugin_event.data.sender['name']
                             dictTValue['tUserId'] = str(plugin_event.data.user_id)
                             dictTValue['tResult'] = tmp_send_result
-                            tmp_reply_str = dictStrCustom['strMasterSendToMaster'].format(**dictTValue)
+                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterSendToMaster'], dictTValue)
                             sendMsgByEvent(
                                 plugin_event,
                                 tmp_reply_str,
@@ -507,7 +507,7 @@ def unity_reply(plugin_event, Proc):
                                 'private',
                                 host_id = tmp_hostId
                             )
-            tmp_reply_str = dictStrCustom['strMasterSendToMasterAlready'].format(**dictTValue)
+            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterSendToMasterAlready'], dictTValue)
             replyMsg(plugin_event, tmp_reply_str)
             return
         elif isMatchWordStart(tmp_reast_str, 'trust'):
@@ -599,7 +599,7 @@ def unity_reply(plugin_event, Proc):
                     )
                     OlivaDiceCore.userConfig.writeUserConfigByUserHash(tmp_userHash)
                     dictTValue['tResult'] = str(tmp_userTrustVal)
-                    tmp_reply_str = dictStrCustom['strMasterTrustSet'].format(**dictTValue)
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterTrustSet'], dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
                 else:
                     tmp_userTrustVal = OlivaDiceCore.userConfig.getUserConfigByKeyWithHash(
@@ -608,7 +608,7 @@ def unity_reply(plugin_event, Proc):
                         botHash = tmp_botHash
                     )
                     dictTValue['tResult'] = str(tmp_userTrustVal)
-                    tmp_reply_str = dictStrCustom['strMasterTrustGet'].format(**dictTValue)
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterTrustGet'], dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
             return
         elif flag_is_from_master and isMatchWordStart(tmp_reast_str, 'group'):
@@ -736,7 +736,7 @@ def unity_reply(plugin_event, Proc):
                             )
                             for group_this in tmp_group_list_clear:
                                 dictTValue['tResult'] = tmp_group_list_clear[group_this]['time']
-                                tmp_reply_str = dictStrCustom['strMasterGroupClearDoUnitSend'].format(**dictTValue)
+                                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterGroupClearDoUnitSend'], dictTValue)
                                 sendMsgByEvent(
                                     plugin_event,
                                     tmp_reply_str,
@@ -747,16 +747,16 @@ def unity_reply(plugin_event, Proc):
                                 time.sleep(messageSplitDelay / 1000)
                                 plugin_event.set_group_leave(group_id = group_this, is_dismiss = True)
                                 dictTValue['tResult'] = tmp_group_list_clear[group_this]['show']
-                                tmp_reply_str = dictStrCustom['strMasterGroupClearDoUnit'].format(**dictTValue)
+                                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterGroupClearDoUnit'], dictTValue)
                                 replyMsg(plugin_event, tmp_reply_str)
                                 time.sleep(messageSplitDelay / 1000)
                             dictTValue['tResult'] = '\n'.join(tmp_group_list_str)
-                            tmp_reply_str = dictStrCustom['strMasterGroupClearDo'].format(**dictTValue)
+                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterGroupClearDo'], dictTValue)
                             replyMsg(plugin_event, tmp_reply_str)
                         elif flag_action_next == 'show':
                             dictTValue['tResult'] = '\n'.join(tmp_group_list_str)
-                            tmp_reply_str = dictStrCustom['strMasterGroupClearShow'].format(**dictTValue)
+                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterGroupClearShow'], dictTValue)
                             replyMsg(plugin_event, tmp_reply_str)
                 else:
-                    tmp_reply_str = dictStrCustom['strMasterPlatformNo'].format(**dictTValue)
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterPlatformNo'], dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)

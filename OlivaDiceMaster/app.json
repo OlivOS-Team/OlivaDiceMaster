@@ -4,8 +4,8 @@
     "namespace" : "OlivaDiceMaster",
     "message_mode" : "old_string",
     "info" : "本模块为OlivaDice的大师模块，提供了更高级的骰主管理功能，其中的功能可能不是必须的，但是却是强大的，这些功能包括但不限于更新和安装新的模块。",
-    "version" : "3.0.5",
-    "svn" : 6,
+    "version" : "3.0.7",
+    "svn" : 8,
     "compatible_svn" : 101,
     "priority" : 20020,
     "support" : [
