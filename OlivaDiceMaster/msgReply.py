@@ -28,6 +28,7 @@ def unity_init(plugin_event, Proc):
 
 def data_init(plugin_event, Proc):
     OlivaDiceMaster.msgCustomManager.initMsgCustom(Proc.Proc_data['bot_info_dict'])
+    OlivaDiceMaster.webAPI.init_getCheckAPI(Proc.Proc_data['bot_info_dict'])
 
 def unity_reply(plugin_event, Proc):
     OlivaDiceCore.userConfig.setMsgCount()

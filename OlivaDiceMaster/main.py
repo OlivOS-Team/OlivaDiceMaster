@@ -20,6 +20,7 @@ import OlivaDiceCore
 
 class Event(object):
     def init(plugin_event, Proc):
+        OlivaDiceMaster.data.globalProc = Proc
         OlivaDiceMaster.msgReply.unity_init(plugin_event, Proc)
 
     def init_after(plugin_event, Proc):

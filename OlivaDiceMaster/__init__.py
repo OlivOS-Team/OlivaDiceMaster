@@ -21,3 +21,4 @@ from . import msgCustom
 from . import msgCustomManager
 from . import data
 from . import webTool
+from . import webAPI
