@@ -17,6 +17,7 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 import OlivaDiceCore
 from . import main
 from . import msgReply
+from . import msgReplyModel
 from . import msgCustom
 from . import msgCustomManager
 from . import data

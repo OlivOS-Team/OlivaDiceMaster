@@ -31,7 +31,7 @@ def GETHttpJson2Dict(url):
         'User-Agent': 'OlivaDiceMaster/%s' % OlivaDiceMaster.data.OlivaDiceMaster_ver_short
     }
     try:
-        msg_res = req.request("GET", send_url, headers = headers)
+        msg_res = req.request("GET", send_url, headers = headers, timeout = 60)
         res = json.loads(msg_res.text)
     except:
         pass
