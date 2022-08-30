@@ -18,12 +18,6 @@ import OlivOS
 import OlivaDiceCore
 import OlivaDiceMaster
 
-dictConsoleSwitchTemplate = {
-    'default' : {
-        'masterAutoUpdate': 1
-    }
-}
-
 dictStrCustomDict = {}
 
 dictStrCustom = {
