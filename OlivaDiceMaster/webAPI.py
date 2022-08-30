@@ -29,17 +29,24 @@ def init_getCheckAPI(botDict:dict):
 def getCheckAPI(botDict:dict):
     while True:
         try:
+            flagSkip = False
             webRes = None
             for botDict_this in botDict:
+                if OlivaDiceCore.console.getConsoleSwitchByHash(
+                    'masterAutoUpdate',
+                    botDict_this
+                ) != 1:
+                    flagSkip = True
+                    break
                 webRes = None
                 webRes = OlivaDiceMaster.webTool.GETHttpJson2Dict('http://api.oliva.icu/checkout/?hash=%s' % str(botDict_this))
-            if webRes == None:
+            if not flagSkip and webRes == None:
                 if OlivaDiceMaster.data.globalProc != None:
                     OlivaDiceMaster.data.globalProc.log(3, '访问更新检测接口失败!', [
                         ('OlivaDice', 'default'),
                         ('autoupdate', 'default')
                     ])
-            if webRes != None and 'code' in webRes and webRes['code'] == 0:
+            if not flagSkip and webRes != None and 'code' in webRes and webRes['code'] == 0:
                 if (
                     'data' in webRes 
                 ) and (
