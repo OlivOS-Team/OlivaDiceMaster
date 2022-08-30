@@ -37,9 +37,13 @@ def getCheckAPI(botDict:dict):
                     botDict_this
                 ) != 1:
                     flagSkip = True
-                    break
                 webRes = None
-                webRes = OlivaDiceMaster.webTool.GETHttpJson2Dict('http://api.oliva.icu/checkout/?hash=%s' % str(botDict_this))
+                webRes = OlivaDiceMaster.webTool.GETHttpJson2Dict(
+                    'http://api.oliva.icu/checkout/?hash=%s&version=%s' % (
+                        str(botDict_this),
+                        str(OlivaDiceCore.data.OlivaDiceCore_ver_short)
+                    )
+                )
             if not flagSkip and webRes == None:
                 if OlivaDiceMaster.data.globalProc != None:
                     OlivaDiceMaster.data.globalProc.log(3, '访问更新检测接口失败!', [
