@@ -14,6 +14,7 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 @Desc      :   None
 '''
 
+import OlivaDiceCore
 import OlivaDiceMaster
 
 import requests as req
@@ -31,7 +32,7 @@ def GETHttpJson2Dict(url):
         'User-Agent': 'OlivaDiceMaster/%s' % OlivaDiceMaster.data.OlivaDiceMaster_ver_short
     }
     try:
-        msg_res = req.request("GET", send_url, headers = headers, timeout = 60)
+        msg_res = req.request("GET", send_url, headers = headers, timeout = 60, proxies = OlivaDiceCore.webTool.get_system_proxy())
         res = json.loads(msg_res.text)
     except:
         pass
@@ -44,7 +45,7 @@ def GETHttpFile(url, path):
         'User-Agent': 'OlivaDiceMaster/%s' % OlivaDiceMaster.data.OlivaDiceMaster_ver_short
     }
     try:
-        msg_res = req.request("GET", send_url, headers = headers)
+        msg_res = req.request("GET", send_url, headers = headers, proxies = OlivaDiceCore.webTool.get_system_proxy())
         releaseToDirForFile(path)
         with open(path, 'wb+') as tmp:
             tmp.write(msg_res.content)
