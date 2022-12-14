@@ -162,7 +162,7 @@ def unity_reply(plugin_event, Proc):
         #此群关闭时中断处理
         if not flag_groupEnable and not flag_force_reply:
             return
-        if flag_is_from_master and isMatchWordStart(tmp_reast_str, 'oopm'):
+        if flag_is_from_master and isMatchWordStart(tmp_reast_str, 'oopm', isCommand = True):
             tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'oopm')
             tmp_reast_str = skipSpaceStart(tmp_reast_str)
             tmp_reply_str = None
@@ -275,7 +275,7 @@ def unity_reply(plugin_event, Proc):
                     tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmApiFailed'], dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
             return
-        elif flag_is_from_master and isMatchWordStart(tmp_reast_str, 'send'):
+        elif flag_is_from_master and isMatchWordStart(tmp_reast_str, 'send', isCommand = True):
             tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'send')
             tmp_reast_str = skipSpaceStart(tmp_reast_str)
             flag_target_type = None
@@ -314,7 +314,7 @@ def unity_reply(plugin_event, Proc):
                 tmp_reply_str = tmp_send_result
                 replyMsg(plugin_event, tmp_reply_str)
             return
-        elif isMatchWordStart(tmp_reast_str, 'send'):
+        elif isMatchWordStart(tmp_reast_str, 'send', isCommand = True):
             tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'send')
             tmp_reast_str = skipSpaceStart(tmp_reast_str)
             tmp_send_result = tmp_reast_str
@@ -348,7 +348,7 @@ def unity_reply(plugin_event, Proc):
             tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterSendToMasterAlready'], dictTValue)
             replyMsg(plugin_event, tmp_reply_str)
             return
-        elif isMatchWordStart(tmp_reast_str, 'trust'):
+        elif isMatchWordStart(tmp_reast_str, 'trust', isCommand = True):
             tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'trust')
             flag_data_type = 'trustLevel'
             flag_target_type = 'user'
@@ -449,7 +449,7 @@ def unity_reply(plugin_event, Proc):
                     tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterTrustGet'], dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
             return
-        elif flag_is_from_master and isMatchWordStart(tmp_reast_str, 'group'):
+        elif flag_is_from_master and isMatchWordStart(tmp_reast_str, 'group', isCommand = True):
             tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'group')
             tmp_reast_str = skipSpaceStart(tmp_reast_str)
             flag_action = None
