@@ -598,3 +598,74 @@ def unity_reply(plugin_event, Proc):
                 else:
                     tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterPlatformNo'], dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
+            return
+        elif flag_is_from_master and isMatchWordStart(tmp_reast_str, 'backup', isCommand = True):
+            tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'backup')
+            tmp_reast_str = skipSpaceStart(tmp_reast_str)
+            # 手动触发备份
+            if isMatchWordStart(tmp_reast_str, 'start'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'start')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                
+                # 发送开始备份的消息
+                dictTValue['tBackupResult'] = ''
+                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupStart'], dictTValue)
+                replyMsg(plugin_event, tmp_reply_str)
+                # 执行备份
+                success, result = OlivaDiceMaster.backup.createBackup(Proc)
+                # 发送备份结果消息
+                dictTValue['tBackupResult'] = result
+                if success:
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupSuccess'], dictTValue)
+                else:
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupFailed'], dictTValue)
+                replyMsg(plugin_event, tmp_reply_str)
+            
+            # 修改配置
+            elif isMatchWordStart(tmp_reast_str, 'change'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'change')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                tmp_reast_str_list = tmp_reast_str.split(' ')
+                if len(tmp_reast_str_list) >= 2:
+                    config_key = tmp_reast_str_list[0]
+                    config_value = ' '.join(tmp_reast_str_list[1:])
+                    try:
+                        # 验证配置项格式
+                        validated_value = OlivaDiceMaster.backup.validateBackupConfigItem(config_key, config_value)
+                        
+                        # 设置配置
+                        OlivaDiceCore.console.setBackupConfigByKey(config_key, validated_value)
+                        OlivaDiceCore.console.saveBackupConfig()
+                        
+                        dictTValue['tConfigKey'] = config_key
+                        dictTValue['tConfigValue'] = str(validated_value)
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupConfigSet'], dictTValue)
+                        replyMsg(plugin_event, tmp_reply_str)
+                        
+                    except ValueError as e:
+                        dictTValue['tBackupResult'] = str(e)
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupFailed'], dictTValue)
+                        replyMsg(plugin_event, tmp_reply_str)
+                else:
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupChangeUsage'], dictTValue)
+                    replyMsg(plugin_event, tmp_reply_str)
+            # 查看配置
+            else:
+                config_key = tmp_reast_str.strip()
+                if config_key:
+                    config_value = OlivaDiceCore.console.getBackupConfigByKey(config_key)
+                    if config_value is not None:
+                        dictTValue['tConfigKey'] = config_key
+                        dictTValue['tConfigValue'] = str(config_value)
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupConfigGet'], dictTValue)
+                        replyMsg(plugin_event, tmp_reply_str)
+                    else:
+                        dictTValue['tConfigKey'] = config_key
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupConfigNotFound'], dictTValue)
+                        replyMsg(plugin_event, tmp_reply_str)
+                else:
+                    # 显示所有配置和状态
+                    backup_info = OlivaDiceMaster.backup.getBackupInfo(Proc)
+                    dictTValue['tBackupResult'] = backup_info
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupInfo'], dictTValue)
+                    replyMsg(plugin_event, tmp_reply_str)
