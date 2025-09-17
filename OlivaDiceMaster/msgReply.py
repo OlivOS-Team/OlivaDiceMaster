@@ -644,7 +644,7 @@ def unity_reply(plugin_event, Proc):
                         
                     except ValueError as e:
                         dictTValue['tBackupResult'] = str(e)
-                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupFailed'], dictTValue)
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupConfigSetFailed'], dictTValue)
                         replyMsg(plugin_event, tmp_reply_str)
                 else:
                     tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupChangeUsage'], dictTValue)

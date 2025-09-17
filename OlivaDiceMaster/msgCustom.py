@@ -56,6 +56,7 @@ dictStrCustom = {
     'strMasterBackupStart': '正在开始备份数据...',
     'strMasterBackupSuccess': '数据备份完成：\n{tBackupResult}',
     'strMasterBackupFailed': '数据备份失败：\n{tBackupResult}',
+    'strMasterBackupConfigSetFailed': '配置项设置失败：\n{tBackupResult}',
     'strMasterBackupConfigSet': '配置项 {tConfigKey} 已设置为: {tConfigValue}',
     'strMasterBackupChangeUsage': '用法: .backup change 配置项 配置值\n可用配置项: startDate, passDay, backupTime, maxBackupCount, isBackup',
     'strMasterBackupConfigGet': '配置项 {tConfigKey}: {tConfigValue}',
