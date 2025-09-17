@@ -122,12 +122,13 @@ OlivaDice大师模块
 .backup 配置项 查看指定配置项的值
 
 可用配置项:
+- isBackup: 自动备份开关 (0=开启, 1=关闭)
 - startDate: 备份开始日期 (yyyy-MM-dd格式)
 - passDay: 备份间隔天数 (整数)
 - backupTime: 备份时间 (HH:mm:ss格式)
 - maxBackupCount: 最大备份数量 (整数)
-- isBackup: 自动备份开关 (0=开启, 1=关闭)
 
+数据备份路径：./plugin/backup
 备份文件格式: data_yyyy-MM-dd_HH-mm-ss.zip''',
 
     '指令更新': '&oopm',
