@@ -600,6 +600,10 @@ def unity_reply(plugin_event, Proc):
                     replyMsg(plugin_event, tmp_reply_str)
             return
         elif flag_is_from_master and isMatchWordStart(tmp_reast_str, 'backup', isCommand = True):
+            if not flag_is_from_master:
+                tem_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strNeedMaster'], dictTValue)
+                replyMsg(plugin_event, tmp_reply_str)
+                return
             tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'backup')
             tmp_reast_str = skipSpaceStart(tmp_reast_str)
             # 手动触发备份
