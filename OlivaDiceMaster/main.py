@@ -30,6 +30,7 @@ class Event(object):
         OlivaDiceMaster.msgReply.data_init(plugin_event, Proc)
         # after后启动备份系统
         threads = threading.Thread(target=OlivaDiceMaster.backup.initBackupSystem, args=(Proc,))
+        threads.daemon = True  # 设置为守护线程，主程序退出时自动结束
         threads.start()
 
     def private_message(plugin_event, Proc):

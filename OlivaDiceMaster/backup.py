@@ -26,6 +26,9 @@ import time
 import shutil
 import re
 
+# 全局变量控制备份线程的停止
+_backup_thread_stop_event = threading.Event()
+
 def createBackup(Proc=None):
     """
     创建备份
@@ -132,13 +135,20 @@ def shouldBackupToday(Proc=None):
                     return True, backup_datetime_today
         # 计算下次备份时间
         next_backup_date = current_date
-        while True:
+        max_search_days = 366  # 最多搜索一年，防止无限循环
+        search_days = 0
+        
+        while search_days < max_search_days:
             days_diff = (next_backup_date - start_date).days
             if days_diff >= 0 and days_diff % pass_day == 0:
                 next_backup_datetime = datetime.datetime.combine(next_backup_date, backup_time)
                 if next_backup_datetime > current_datetime:
                     return False, next_backup_datetime
             next_backup_date += datetime.timedelta(days=1)
+            search_days += 1
+        
+        # 如果搜索了一年都没找到下次备份时间，返回None
+        return False, None
             
     except Exception as e:
         if Proc:
@@ -167,22 +177,32 @@ def autoBackupTimer(Proc):
     """
     自动备份定时器
     """
-    while True:
+    last_backup_check = None
+    
+    while not _backup_thread_stop_event.is_set():
         try:
+            # 检查停止事件，如果设置了停止事件则退出
+            if _backup_thread_stop_event.wait(1.0):  # 等待1秒或直到停止事件被设置
+                break
+            
             # 检查备份开关状态
             is_backup_enabled = OlivaDiceCore.console.getBackupConfigByKey('isBackup')
             if is_backup_enabled is None:
                 is_backup_enabled = 0  # 默认开启自动备份
+            
             # 如果自动备份被关闭，则跳过备份检查
             if is_backup_enabled == 1:
-                time.sleep(60)  # 等待1分钟后再次检查
                 continue
+            
             # 获取当前时间（HH:MM:SS格式）
             current_time = time.strftime("%H:%M:%S", time.localtime())
+            
             # 获取备份时间配置
             backup_time_str = OlivaDiceCore.console.getBackupConfigByKey('backupTime')
             if backup_time_str:
-                if current_time == backup_time_str:
+                # 优化：只在备份时间点才检查是否需要备份，避免重复检查
+                if current_time == backup_time_str and last_backup_check != backup_time_str:
+                    last_backup_check = backup_time_str
                     should_backup, _ = shouldBackupToday(Proc)
                     if should_backup:
                         success, result = createBackup(Proc)
@@ -192,12 +212,18 @@ def autoBackupTimer(Proc):
                         else:
                             if Proc:
                                 Proc.log(2, f"自动备份失败: {result}")
-            # 每秒检查一次
-            time.sleep(1)
+                elif current_time != backup_time_str:
+                    # 重置检查标记，允许下次备份时间再次检查
+                    last_backup_check = None
+            
         except Exception as e:
             if Proc:
                 Proc.log(2, f"自动备份定时器错误: {str(e)}")
-            time.sleep(60)  # 出错时等待1分钟
+            # 出错时等待1分钟，但仍要检查停止事件
+            _backup_thread_stop_event.wait(60.0)
+    
+    if Proc:
+        Proc.log(2, "自动备份定时器已停止")
 def getBackupInfo(Proc=None):
     """
     获取备份系统信息
@@ -279,11 +305,24 @@ def validateBackupConfigItem(key, value):
     except Exception as e:
         raise ValueError(f"配置项 '{key}' 格式验证失败: {str(e)}")
 
+def stopBackupSystem(Proc=None):
+    """
+    停止备份系统
+    """
+    global _backup_thread_stop_event
+    _backup_thread_stop_event.set()
+    if Proc:
+        Proc.log(2, "备份系统停止信号已发送")
+
 def initBackupSystem(Proc):
     """
     初始化备份系统并运行自动备份定时器
     """
     try:
+        # 重置停止事件
+        global _backup_thread_stop_event
+        _backup_thread_stop_event.clear()
+        
         # 初始化备份配置
         OlivaDiceCore.console.initBackupConfig()
         OlivaDiceCore.console.readBackupConfig()
