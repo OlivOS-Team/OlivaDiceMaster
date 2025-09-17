@@ -117,7 +117,7 @@ OlivaDice大师模块
 
     'backup': '''数据备份:
 .backup 查看备份配置和状态
-.backup start 手动触发数据备份（仅骰主可用）
+.backup start 手动触发数据备份
 .backup change 配置项 配置值 修改备份配置
 .backup 配置项 查看指定配置项的值
 
@@ -133,5 +133,6 @@ OlivaDice大师模块
     '指令更新': '&oopm',
     '反馈发送': '&send',
     '数据备份': '&backup',
+    '备份': '&backup',
     '指令清群': '&groupclear'
 }
