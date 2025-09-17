@@ -211,13 +211,11 @@ def getBackupInfo(Proc=None):
         backup_time = OlivaDiceCore.console.getBackupConfigByKey('backupTime')
         max_backup_count = OlivaDiceCore.console.getBackupConfigByKey('maxBackupCount')
         is_backup = OlivaDiceCore.console.getBackupConfigByKey('isBackup')
-        if is_backup is None:
-            is_backup = 0  # 默认开启
+        info_lines.append(f"自动备份状态: {'关闭' if is_backup == 1 else '开启'}")
         info_lines.append(f"备份开始日期: {start_date}")
         info_lines.append(f"备份间隔天数: {pass_day}")
-        info_lines.append(f"备份时间: {backup_time}")
+        info_lines.append(f"自动备份时间: {backup_time}")
         info_lines.append(f"最大备份数量: {max_backup_count}")
-        info_lines.append(f"自动备份状态: {'关闭' if is_backup == 1 else '开启'}")
         # 检查今天是否需要备份
         should_backup, next_backup_time = shouldBackupToday(Proc)
         info_lines.append(f"今天是否需要备份: {'是' if should_backup else '否'}")
