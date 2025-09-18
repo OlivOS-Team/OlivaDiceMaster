@@ -189,7 +189,7 @@ def _calculateBackupSchedule(Proc):
 
 def shouldBackupToday(Proc):
     """
-    检查今天是否应该进行备份
+    检查今天是否应该进行备份（内存优化版）
     返回: (是否应该备份, 下次备份时间)
     """
     global _backup_schedule_cache
@@ -226,14 +226,22 @@ def shouldBackupToday(Proc):
                 
                 if is_backup_enabled == 1:
                     # 自动备份关闭时，只显示状态
-                    Proc.log(2, f"备份计划已更新: 自动备份=关闭")
+                    Proc.log(2, "备份计划已更新: 自动备份=关闭")
                 else:
                     # 自动备份开启时，显示完整信息
                     Proc.log(2, f"备份计划已更新: 自动备份=开启, 今日需备份={should_backup}, 下次备份时间={next_time}")
+            
+            # 显式清理局部变量，帮助垃圾回收
+            del should_backup, next_time, config_valid, is_backup_enabled
         
-        # 返回缓存的结果
-        return (_backup_schedule_cache['should_backup_today'], 
-                _backup_schedule_cache['next_backup_time'])
+        # 获取返回值并清理引用
+        result_should_backup = _backup_schedule_cache['should_backup_today']
+        result_next_time = _backup_schedule_cache['next_backup_time']
+        
+        # 清理局部变量
+        del current_date, current_config_hash
+        
+        return (result_should_backup, result_next_time)
                 
     except Exception as e:
         if Proc:
@@ -255,19 +263,22 @@ def clearBackupCache():
 
 def checkConfigChanged():
     """
-    轻量级配置变更检查，只检查配置哈希是否变更
+    轻量级配置变更检查，只检查配置哈希是否变更（内存优化版）
     返回: 配置是否发生变更
     """
     global _backup_schedule_cache
     try:
         current_config_hash = _getConfigHash()
-        return _backup_schedule_cache['last_config_hash'] != current_config_hash
+        result = _backup_schedule_cache['last_config_hash'] != current_config_hash
+        # 显式清理局部变量
+        del current_config_hash
+        return result
     except:
         return True  # 出错时认为配置已变更
 
 def getCachedBackupStatus():
     """
-    获取缓存中的备份状态信息（只读，不触发计算）
+    获取缓存中的备份状态信息（只读，不触发计算，内存优化版）
     返回: (是否应该备份, 下次备份时间, 缓存是否有效)
     """
     global _backup_schedule_cache
@@ -278,12 +289,21 @@ def getCachedBackupStatus():
             
         # 检查日期是否过期
         current_date = datetime.date.today()
-        if _backup_schedule_cache['last_check_date'] != current_date:
+        cache_valid = _backup_schedule_cache['last_check_date'] == current_date
+        
+        if not cache_valid:
+            # 清理局部变量
+            del current_date
             return None, None, False
-            
-        return (_backup_schedule_cache['should_backup_today'], 
-                _backup_schedule_cache['next_backup_time'], 
-                True)
+        
+        # 获取结果
+        result_should_backup = _backup_schedule_cache['should_backup_today']
+        result_next_time = _backup_schedule_cache['next_backup_time']
+        
+        # 清理局部变量
+        del current_date
+        
+        return (result_should_backup, result_next_time, True)
     except:
         return None, None, False
 
