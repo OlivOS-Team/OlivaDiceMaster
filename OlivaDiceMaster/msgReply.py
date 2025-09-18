@@ -632,11 +632,9 @@ def unity_reply(plugin_event, Proc):
                     try:
                         # 验证配置项格式
                         validated_value = OlivaDiceMaster.backup.validateBackupConfigItem(config_key, config_value)
-                        
                         # 设置配置
                         OlivaDiceCore.console.setBackupConfigByKey(config_key, validated_value)
                         OlivaDiceCore.console.saveBackupConfig()
-                        
                         dictTValue['tConfigKey'] = config_key
                         dictTValue['tConfigValue'] = str(validated_value)
                         tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupConfigSet'], dictTValue)
