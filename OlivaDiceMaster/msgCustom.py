@@ -52,7 +52,16 @@ dictStrCustom = {
     'strMasterGroupClearDoUnit': '已经清除群:\n{tResult}',
     'strMasterGroupClearDoUnitSend': '检测到在此处最后发言为{tResult}，即将自动退出',
     'strMasterGroupClearDo': '已检查[{tMasterCount01}]个群\n已经清除[{tMasterCount02}]个群',
-    'strMasterGroupClearUnit': '[{tName}] - ({tId}): {tResult}'
+    'strMasterGroupClearUnit': '[{tName}] - ({tId}): {tResult}',
+    'strMasterBackupStart': '正在开始备份数据...',
+    'strMasterBackupSuccess': '数据备份完成：\n{tBackupResult}',
+    'strMasterBackupFailed': '数据备份失败：\n{tBackupResult}',
+    'strMasterBackupConfigSet': '配置项 {tConfigKey} 已设置为: {tConfigValue}',
+    'strMasterBackupConfigSetFailed': '配置项设置失败：\n{tBackupResult}',
+    'strMasterBackupChangeUsage': '用法: .backup change 配置项 配置值\n可用配置项: startDate, passDay, backupTime, maxBackupCount, isBackup',
+    'strMasterBackupConfigGet': '配置项 {tConfigKey}: {tConfigValue}',
+    'strMasterBackupConfigNotFound': '配置项 {tConfigKey} 不存在或未设置',
+    'strMasterBackupInfo': '{tBackupResult}'
 }
 
 dictStrConst = {
@@ -66,7 +75,10 @@ dictTValue = {
     'tMasterOopkNameList': 'N/A',
     'tMasterTrustName': '无名信任',
     'tMasterCount01': 'N/A',
-    'tMasterCount02': 'N/A'
+    'tMasterCount02': 'N/A',
+    'tBackupResult': 'N/A',
+    'tConfigKey': 'N/A',
+    'tConfigValue': 'N/A'
 }
 
 dictHelpDocTemp = {
@@ -104,7 +116,25 @@ OlivaDice大师模块
 .group clear [天数] 查找超过对应天数未触发的多人聊天
 .group clear do [天数] 清理超过对应天数未触发的多人聊天''',
 
+    'backup': '''数据备份:
+.backup 查看备份配置和状态
+.backup start 手动触发数据备份
+.backup change 配置项 配置值 修改备份配置
+.backup 配置项 查看指定配置项的值
+
+可用配置项:
+- isBackup: 自动备份开关 (0=开启, 1=关闭)
+- startDate: 备份开始日期 (yyyy-MM-dd格式)
+- passDay: 备份间隔天数 (整数)
+- backupTime: 备份时间 (HH:mm:ss格式)
+- maxBackupCount: 最大备份数量 (整数)
+
+数据备份路径：./plugin/backup
+备份文件格式: data_yyyy-MM-dd_HH-mm-ss.zip''',
+
     '指令更新': '&oopm',
     '反馈发送': '&send',
+    '数据备份': '&backup',
+    '备份': '&backup',
     '指令清群': '&groupclear'
 }

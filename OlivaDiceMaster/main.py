@@ -17,6 +17,8 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 import OlivOS
 import OlivaDiceMaster
 import OlivaDiceCore
+import OlivaDiceMaster.backup
+import threading
 
 class Event(object):
     def init(plugin_event, Proc):
@@ -26,6 +28,10 @@ class Event(object):
     def init_after(plugin_event, Proc):
         OlivaDiceCore.crossHook.dictHookList['model'].append(['OlivaDiceMaster', OlivaDiceMaster.data.OlivaDiceMaster_ver_short])
         OlivaDiceMaster.msgReply.data_init(plugin_event, Proc)
+        # after后启动备份系统
+        threads = threading.Thread(target=OlivaDiceMaster.backup.initBackupSystem, args=(Proc,))
+        threads.daemon = True  # 设置为守护线程，主程序退出时自动结束
+        threads.start()
 
     def private_message(plugin_event, Proc):
         OlivaDiceMaster.msgReply.unity_reply(plugin_event, Proc)
