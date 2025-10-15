@@ -49,6 +49,7 @@ dictStrCustom = {
     'strMasterTrustGet': '[{tName}]({tId})的{tMasterTrustName}为：{tResult}',
     'strMasterPlatformNo': '该功能在此平台不受支持',
     'strMasterGroupClearShow': '已检查[{tMasterCount01}]个群:\n{tResult}\n已经决定清除[{tMasterCount02}]个群\n请使用[.group clear do (天数)]指令执行这项操作',
+    'strMasterGroupClearShowOff': '已检查[{tMasterCount01}]个群:\n{tResult}\n已经决定清除[{tMasterCount02}]个群\n请使用[.group clear do off]指令执行这项操作',
     'strMasterGroupClearDoUnit': '已经清除群:\n{tResult}',
     'strMasterGroupClearDoUnitSend': '检测到在此处最后发言为{tResult}，即将自动退出',
     'strMasterGroupClearDo': '已检查[{tMasterCount01}]个群\n已经清除[{tMasterCount02}]个群',
@@ -114,7 +115,9 @@ OlivaDice大师模块
 
     'groupclear': '''指令清群:
 .group clear [天数] 查找超过对应天数未触发的多人聊天
-.group clear do [天数] 清理超过对应天数未触发的多人聊天''',
+.group clear do [天数] 清理超过对应天数未触发的多人聊天
+.group clear off 查找bot off的多人聊天
+.group clear do off 清理bot off的多人聊天''',
 
     'backup': '''数据备份:
 .backup 查看备份配置和状态
