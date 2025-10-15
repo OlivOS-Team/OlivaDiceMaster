@@ -476,11 +476,14 @@ def unity_reply(plugin_event, Proc):
             flag_action_next = None
             flag_clear_gate = 60 * 60 * 24 * 30
             flag_clear_trustLevel_gate = 2
-            if isMatchWordStart(tmp_reast_str, 'clear'):
-                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'clear')
+            # time mode 按时间查找
+            flag_clear_mode = 'time'
+            if isMatchWordStart(tmp_reast_str, ['clear', 'clr']):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, ['clear', 'clr'])
                 tmp_reast_str = skipSpaceStart(tmp_reast_str)
                 flag_action = 'clear'
                 flag_action_next = 'show'
+            # 先检查是否有show或do
             if flag_action == 'clear' and isMatchWordStart(tmp_reast_str, 'show'):
                 tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'show')
                 tmp_reast_str = skipSpaceStart(tmp_reast_str)
@@ -489,9 +492,15 @@ def unity_reply(plugin_event, Proc):
                 tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'do')
                 tmp_reast_str = skipSpaceStart(tmp_reast_str)
                 flag_action_next = 'do'
+            # 然后检查是否是清理off状态的群
+            if flag_action == 'clear' and isMatchWordStart(tmp_reast_str, 'off'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'off')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                flag_clear_mode = 'off'
             if flag_action =='clear' and flag_action_next != None:
                 tmp_reast_str.rstrip(' ')
-                if len(tmp_reast_str) > 0:
+                # 只有在time模式下才处理天数参数
+                if flag_clear_mode == 'time' and len(tmp_reast_str) > 0:
                     if tmp_reast_str.isdigit():
                         flag_clear_gate = 60 * 60 * 24 * int(tmp_reast_str)
                 tmp_group_list = []
@@ -511,6 +520,8 @@ def unity_reply(plugin_event, Proc):
                             tmp_group_unit['id'] = group_this['id']
                             tmp_group_unit['trustLevel'] = OlivaDiceCore.userConfig.dictUserConfigNoteDefault['trustLevel']
                             tmp_userLastHit = None
+                              # 记录群是否开启
+                            tmp_group_unit['groupEnable'] = True
                             tmp_userHash = OlivaDiceCore.userConfig.getUserHash(
                                 userId = tmp_group_unit['id'],
                                 userType = 'group',
@@ -532,6 +543,14 @@ def unity_reply(plugin_event, Proc):
                                     userConfigKey = 'trustLevel',
                                     botHash = tmp_botHash
                                 )
+                                # 获取群是否开启的状态
+                                tmp_group_unit['groupEnable'] = OlivaDiceCore.userConfig.getUserConfigByKey(
+                                    userId = tmp_group_unit['id'],
+                                    userType = 'group',
+                                    platform = tmp_userPlatform,
+                                    userConfigKey = 'groupEnable',
+                                    botHash = tmp_botHash
+                                )
                             tmp_group_unit['lastHit'] = tmp_userLastHit
                             tmp_group_unit['lastHitShow'] = tmp_userLastHit
                             if tmp_group_unit['lastHit'] == None:
@@ -541,49 +560,68 @@ def unity_reply(plugin_event, Proc):
                         tmp_group_list.sort(key = lambda x : x['lastHit'])
                         tmp_group_list_str = []
                         tmp_group_list_clear = {}
-                        for group_this in tmp_group_list:
-                            flag_skip = flag_clear_trustLevel_gate <= group_this['trustLevel']
-                            tmp_time = '无记录'
-                            tmp_time_1 = '无记录'
-                            tmp_time_type = '秒'
-                            tmp_time_int_raw = int(time.time()) + 1
-                            if group_this['lastHitShow'] != None:
-                                tmp_time_int = int(time.time()) - group_this['lastHitShow']
-                                tmp_time_int_raw = tmp_time_int
-                                if tmp_time_int >= 60 * 60 * 24:
-                                    tmp_time_int = int(tmp_time_int / (60 * 60 * 24))
-                                    tmp_time_type = '天'
-                                elif tmp_time_int >= 60 * 60:
-                                    tmp_time_int = int(tmp_time_int / (60 * 60))
-                                    tmp_time_type = '小时'
-                                elif tmp_time_int >= 60:
-                                    tmp_time_int = int(tmp_time_int / 60)
-                                    tmp_time_type = '分钟'
-                                tmp_time = '%s%s前' % (
-                                    str(tmp_time_int),
-                                    tmp_time_type
-                                )
-                                tmp_time_1 = '%s%s' % (
-                                    str(tmp_time_int),
-                                    tmp_time_type
-                                )
-                                if flag_skip:
-                                    tmp_time = tmp_time + ' (信任)'
-                            tmp_unit_data = {
-                                'tName': group_this['name'],
-                                'tId': group_this['id'],
-                                'tResult': tmp_time
-                            }
-                            if flag_clear_gate < tmp_time_int_raw:
-                                tmp_strMasterGroupClearUnit = dictStrCustom['strMasterGroupClearUnit'].format(**tmp_unit_data)
-                                tmp_group_list_str.append(
-                                    dictStrCustom['strMasterGroupClearUnit'].format(**tmp_unit_data)
-                                )
-                                if not flag_skip:
-                                    tmp_group_list_clear[str(group_this['id'])] = {
-                                        'show': tmp_strMasterGroupClearUnit,
-                                        'time': tmp_time_1
+                        if flag_clear_mode == 'off':
+                            # off模式：清理bot off的群
+                            for group_this in tmp_group_list:
+                                flag_skip = flag_clear_trustLevel_gate <= group_this['trustLevel']
+                                if not group_this['groupEnable']:
+                                    tmp_unit_data = {
+                                        'tName': group_this['name'],
+                                        'tId': group_this['id'],
+                                        'tResult': 'Bot已关闭' + (' (信任)' if flag_skip else '')
                                     }
+                                    tmp_strMasterGroupClearUnit = dictStrCustom['strMasterGroupClearUnit'].format(**tmp_unit_data)
+                                    tmp_group_list_str.append(tmp_strMasterGroupClearUnit)
+                                    if not flag_skip:
+                                        tmp_group_list_clear[str(group_this['id'])] = {
+                                            'show': tmp_strMasterGroupClearUnit,
+                                            'time': 'Bot已关闭'
+                                        }
+                        else:
+                            # time模式：按时间清理
+                            for group_this in tmp_group_list:
+                                flag_skip = flag_clear_trustLevel_gate <= group_this['trustLevel']
+                                tmp_time = '无记录'
+                                tmp_time_1 = '无记录'
+                                tmp_time_type = '秒'
+                                tmp_time_int_raw = int(time.time()) + 1
+                                if group_this['lastHitShow'] != None:
+                                    tmp_time_int = int(time.time()) - group_this['lastHitShow']
+                                    tmp_time_int_raw = tmp_time_int
+                                    if tmp_time_int >= 60 * 60 * 24:
+                                        tmp_time_int = int(tmp_time_int / (60 * 60 * 24))
+                                        tmp_time_type = '天'
+                                    elif tmp_time_int >= 60 * 60:
+                                        tmp_time_int = int(tmp_time_int / (60 * 60))
+                                        tmp_time_type = '小时'
+                                    elif tmp_time_int >= 60:
+                                        tmp_time_int = int(tmp_time_int / 60)
+                                        tmp_time_type = '分钟'
+                                    tmp_time = '%s%s前' % (
+                                        str(tmp_time_int),
+                                        tmp_time_type
+                                    )
+                                    tmp_time_1 = '%s%s' % (
+                                        str(tmp_time_int),
+                                        tmp_time_type
+                                    )
+                                    if flag_skip:
+                                        tmp_time = tmp_time + ' (信任)'
+                                tmp_unit_data = {
+                                    'tName': group_this['name'],
+                                    'tId': group_this['id'],
+                                    'tResult': tmp_time
+                                }
+                                if flag_clear_gate < tmp_time_int_raw:
+                                    tmp_strMasterGroupClearUnit = dictStrCustom['strMasterGroupClearUnit'].format(**tmp_unit_data)
+                                    tmp_group_list_str.append(
+                                        dictStrCustom['strMasterGroupClearUnit'].format(**tmp_unit_data)
+                                    )
+                                    if not flag_skip:
+                                        tmp_group_list_clear[str(group_this['id'])] = {
+                                            'show': tmp_strMasterGroupClearUnit,
+                                            'time': tmp_time_1
+                                        }
                         dictTValue['tMasterCount01'] = str(len(tmp_group_list))
                         dictTValue['tMasterCount02'] = str(len(tmp_group_list_clear))
                         dictTValue['tResult'] = '\n'.join(tmp_group_list_str)
@@ -613,7 +651,10 @@ def unity_reply(plugin_event, Proc):
                             replyMsg(plugin_event, tmp_reply_str)
                         elif flag_action_next == 'show':
                             dictTValue['tResult'] = '\n'.join(tmp_group_list_str)
-                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterGroupClearShow'], dictTValue)
+                            if flag_clear_mode == 'off':
+                                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterGroupClearShowOff'], dictTValue)
+                            else:
+                                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterGroupClearShow'], dictTValue)
                             replyMsg(plugin_event, tmp_reply_str)
                 else:
                     tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterPlatformNo'], dictTValue)
