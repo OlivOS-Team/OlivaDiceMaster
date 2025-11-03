@@ -30,10 +30,8 @@ def get_bot_display_name(botHash, bot_info):
     获取bot的显示名称
     """
     bot_name = "未知"
-    # 先尝试从 bot_info 获取
     if hasattr(bot_info, 'name') and bot_info.name:
         bot_name = bot_info.name
-    # 尝试从用户配置中获取保存的昵称
     try:
         if hasattr(bot_info, 'id') and hasattr(bot_info, 'platform') and bot_info.platform:
             bot_id = str(bot_info.id)
@@ -42,13 +40,15 @@ def get_bot_display_name(botHash, bot_info):
                 userType = 'user',
                 platform = bot_info.platform['platform']
             )
-            saved_name = OlivaDiceCore.userConfig.getUserConfigByKeyWithHash(
-                userHash = bot_user_hash,
-                userConfigKey = 'userName',
-                botHash = botHash
-            )
-            if saved_name and saved_name != '用户':
-                bot_name = saved_name
+            userConfigNoteKey = 'configNote'
+            dictUserConfigData = OlivaDiceCore.userConfig.dictUserConfigData
+            if bot_user_hash in dictUserConfigData:
+                if botHash in dictUserConfigData[bot_user_hash]:
+                    if userConfigNoteKey in dictUserConfigData[bot_user_hash][botHash]:
+                        if 'userName' in dictUserConfigData[bot_user_hash][botHash][userConfigNoteKey]:
+                            saved_name = dictUserConfigData[bot_user_hash][botHash][userConfigNoteKey]['userName']
+                            if saved_name and saved_name != '用户':
+                                bot_name = saved_name
     except:
         pass
     return bot_name
