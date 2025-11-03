@@ -22,6 +22,7 @@ import hashlib
 import time
 import shutil
 import os
+import re
 
 def unity_init(plugin_event, Proc):
     pass
@@ -42,6 +43,7 @@ def unity_reply(plugin_event, Proc):
 
     sendMsgByEvent = OlivaDiceCore.msgReply.sendMsgByEvent
     replyMsg = OlivaDiceCore.msgReply.replyMsg
+    replyMsgLazyHelpByEvent = OlivaDiceCore.msgReply.replyMsgLazyHelpByEvent
     isMatchWordStart = OlivaDiceCore.msgReply.isMatchWordStart
     getMatchWordStartRight = OlivaDiceCore.msgReply.getMatchWordStartRight
     skipSpaceStart = OlivaDiceCore.msgReply.skipSpaceStart
@@ -729,3 +731,140 @@ def unity_reply(plugin_event, Proc):
                     dictTValue['tBackupResult'] = backup_info
                     tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterBackupInfo'], dictTValue)
                     replyMsg(plugin_event, tmp_reply_str)
+            return
+        elif flag_is_from_master and isMatchWordStart(tmp_reast_str, 'account', isCommand = True):
+            tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'account')
+            tmp_reast_str = skipSpaceStart(tmp_reast_str)
+            if isMatchWordStart(tmp_reast_str, 'link'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'link')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                tmp_reast_str_clean = re.sub(r'[；;，,]', ' ', tmp_reast_str)
+                tmp_reast_str_list = tmp_reast_str_clean.split()
+                if len(tmp_reast_str_list) >= 2:
+                    slaveBotHash = tmp_reast_str_list[0].strip()
+                    masterBotHash = tmp_reast_str_list[1].strip()
+                    success, result = OlivaDiceMaster.accountManager.linkAccount(slaveBotHash, masterBotHash)
+                    dictTValue['tAccountResult'] = result
+                    if success:
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountLinkSuccess'], dictTValue)
+                    else:
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountLinkFailed'], dictTValue)
+                    replyMsg(plugin_event, tmp_reply_str)
+                else:
+                    replyMsgLazyHelpByEvent(plugin_event, 'account')
+                    return
+            elif isMatchWordStart(tmp_reast_str, 'unlink'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'unlink')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                tmp_reast_str = tmp_reast_str.strip()
+                if tmp_reast_str:
+                    slaveBotHash = tmp_reast_str
+                    success, result = OlivaDiceMaster.accountManager.unlinkAccount(slaveBotHash)
+                    dictTValue['tAccountResult'] = result
+                    if success:
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountUnlinkSuccess'], dictTValue)
+                    else:
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountUnlinkFailed'], dictTValue)
+                    replyMsg(plugin_event, tmp_reply_str)
+                else:
+                    replyMsgLazyHelpByEvent(plugin_event, 'account')
+                    return
+            elif isMatchWordStart(tmp_reast_str, 'list', fullMatch = True):
+                result = OlivaDiceMaster.accountManager.listAccountRelations(Proc.Proc_data['bot_info_dict'], plugin_event)
+                dictTValue['tAccountResult'] = result
+                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountList'], dictTValue)
+                replyMsg(plugin_event, tmp_reply_str)
+            elif isMatchWordStart(tmp_reast_str, 'show'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'show')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                tmp_reast_str = tmp_reast_str.strip()
+                # 如果没有指定hash，使用当前账号
+                if tmp_reast_str:
+                    botHash = tmp_reast_str
+                else:
+                    botHash = plugin_event.bot_info.hash
+                result = OlivaDiceMaster.accountManager.showAccountInfo(botHash, Proc.Proc_data['bot_info_dict'], plugin_event)
+                dictTValue['tAccountResult'] = result
+                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountShow'], dictTValue)
+                replyMsg(plugin_event, tmp_reply_str)
+            elif isMatchWordStart(tmp_reast_str, 'import'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'import')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                
+                targetBotHash = plugin_event.bot_info.hash
+                # 检查是否是 "path" 选项
+                if isMatchWordStart(tmp_reast_str, 'path'):
+                    tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'path')
+                    tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                    tmp_reast_str_clean = tmp_reast_str
+                    separator_pos = -1
+                    for sep in ['；', ';', '，', ',']:
+                        pos = tmp_reast_str_clean.find(sep)
+                        if pos != -1:
+                            separator_pos = pos
+                            break
+                    if separator_pos != -1:
+                        # 有分隔符，分割路径和源Hash
+                        zip_path = tmp_reast_str_clean[:separator_pos].strip()
+                        source_hash = tmp_reast_str_clean[separator_pos+1:].strip()
+                        source_hash = re.sub(r'[；;，,]', '', source_hash).strip()
+                    else:
+                        # 没有分隔符，按空格分割
+                        tmp_reast_str_list = tmp_reast_str_clean.split(None, 1)  # 最多分割成2部分
+                        zip_path = tmp_reast_str_list[0].strip() if tmp_reast_str_list else None
+                        source_hash = tmp_reast_str_list[1].strip() if len(tmp_reast_str_list) > 1 else None
+                    if zip_path:
+                        success, result, auto_hash = OlivaDiceMaster.accountManager.importAccountDataFromZip(
+                            zip_path, targetBotHash, Proc, overwrite=False, sourceBotHash=source_hash
+                        )
+                        dictTValue['tAccountResult'] = result
+                        
+                        if success:
+                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountImportSuccess'], dictTValue)
+                        else:
+                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountImportFailed'], dictTValue)
+                        replyMsg(plugin_event, tmp_reply_str)
+                    else:
+                        replyMsgLazyHelpByEvent(plugin_event, 'account')
+                        return
+                # 检查是否是 "hash" 选项
+                elif isMatchWordStart(tmp_reast_str, 'hash'):
+                    tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'hash')
+                    tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                    tmp_reast_str = tmp_reast_str.strip()
+                    
+                    if tmp_reast_str:
+                        sourceBotHash = tmp_reast_str
+                        success, result = OlivaDiceMaster.accountManager.importAccountData(sourceBotHash, targetBotHash, Proc, overwrite=False)
+                        dictTValue['tAccountResult'] = result
+                        
+                        if success:
+                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountImportSuccess'], dictTValue)
+                        else:
+                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountImportFailed'], dictTValue)
+                        replyMsg(plugin_event, tmp_reply_str)
+                    else:
+                        replyMsgLazyHelpByEvent(plugin_event, 'account')
+                        return
+                else:
+                    replyMsgLazyHelpByEvent(plugin_event, 'account')
+                    return
+            elif isMatchWordStart(tmp_reast_str, 'export'):
+                tmp_reast_str = getMatchWordStartRight(tmp_reast_str, 'export')
+                tmp_reast_str = skipSpaceStart(tmp_reast_str)
+                tmp_reast_str = tmp_reast_str.strip()
+                # 如果没有指定hash，导出当前账号数据
+                if tmp_reast_str:
+                    botHash = tmp_reast_str
+                else:
+                    botHash = plugin_event.bot_info.hash
+                success, result = OlivaDiceMaster.accountManager.exportAccountData(botHash, Proc)
+                dictTValue['tAccountResult'] = result
+                if success:
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountExportSuccess'], dictTValue)
+                else:
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountExportFailed'], dictTValue)
+                replyMsg(plugin_event, tmp_reply_str)
+            else:
+                replyMsgLazyHelpByEvent(plugin_event, 'account')
+                return
