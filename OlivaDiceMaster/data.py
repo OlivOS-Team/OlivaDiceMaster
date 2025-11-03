@@ -15,8 +15,8 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 '''
 
 
-OlivaDiceMaster_ver = '3.0.16'
-OlivaDiceMaster_svn = 17
+OlivaDiceMaster_ver = '3.0.17'
+OlivaDiceMaster_svn = 18
 OlivaDiceMaster_ver_short = '%s(%s)' % (str(OlivaDiceMaster_ver), str(OlivaDiceMaster_svn))
 
 OlivaDiceMaster_oopm_host = 'https://api.dice.center/OlivaDiceVer'
@@ -24,3 +24,5 @@ OlivaDiceMaster_oopm_host = 'https://api.dice.center/OlivaDiceVer'
 globalProc = None
 
 backupPath = './plugin/data/'
+
+exportPath = './plugin/export'
