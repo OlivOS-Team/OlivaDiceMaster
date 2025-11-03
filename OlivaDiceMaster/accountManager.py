@@ -25,13 +25,33 @@ import re
 import zipfile
 import tempfile
 
-def get_bot_display_name(botHash, bot_info):
+def get_bot_display_name(botHash, bot_info, plugin_event=None):
     """
     获取bot的显示名称
     """
     bot_name = "未知"
-    if hasattr(bot_info, 'name') and bot_info.name:
-        bot_name = bot_info.name
+    # 优先通过API调用获取名称
+    try:
+        # 如果plugin_event为None，构建fake_event
+        if plugin_event is None:
+            fake_event = OlivOS.API.Event(
+                OlivOS.contentAPI.fake_sdk_event(
+                    bot_info=bot_info,
+                    fakename='OlivaDiceMaster'
+                ),
+                None
+            )
+            res_data = fake_event.get_login_info(bot_info)
+        else:
+            res_data = plugin_event.get_login_info(bot_info)
+        
+        if res_data and res_data.get('active') and 'data' in res_data:
+            bot_name = res_data['data'].get('name', '未知')
+            if bot_name and bot_name != '未知':
+                return bot_name
+    except:
+        pass
+    # 尝试从用户配置中获取保存的昵称
     try:
         if hasattr(bot_info, 'id') and hasattr(bot_info, 'platform') and bot_info.platform:
             bot_id = str(bot_info.id)
@@ -40,15 +60,13 @@ def get_bot_display_name(botHash, bot_info):
                 userType = 'user',
                 platform = bot_info.platform['platform']
             )
-            userConfigNoteKey = 'configNote'
-            dictUserConfigData = OlivaDiceCore.userConfig.dictUserConfigData
-            if bot_user_hash in dictUserConfigData:
-                if botHash in dictUserConfigData[bot_user_hash]:
-                    if userConfigNoteKey in dictUserConfigData[bot_user_hash][botHash]:
-                        if 'userName' in dictUserConfigData[bot_user_hash][botHash][userConfigNoteKey]:
-                            saved_name = dictUserConfigData[bot_user_hash][botHash][userConfigNoteKey]['userName']
-                            if saved_name and saved_name != '用户':
-                                bot_name = saved_name
+            saved_name = OlivaDiceCore.userConfig.getUserConfigByKeyWithHash(
+                userHash = bot_user_hash,
+                userConfigKey = 'userName',
+                botHash = botHash
+            )
+            if saved_name and saved_name != '用户':
+                bot_name = saved_name
     except:
         pass
     return bot_name
@@ -177,7 +195,7 @@ def unlinkAccount(slaveBotHash):
     except Exception as e:
         return False, f"断开主从关系失败: {str(e)}"
 
-def listAccountRelations(bot_info_dict):
+def listAccountRelations(bot_info_dict, plugin_event=None):
     """
     列出所有账号和主从关系
     """
@@ -193,13 +211,13 @@ def listAccountRelations(bot_info_dict):
             master_to_slaves[master].append(slave)
         # 遍历所有账号
         for botHash in bot_info_dict:
-            bot_name = get_bot_display_name(botHash, bot_info_dict[botHash])
+            bot_name = get_bot_display_name(botHash, bot_info_dict[botHash], plugin_event)
             bot_id = bot_info_dict[botHash].id if hasattr(bot_info_dict[botHash], 'id') else "未知"
             # 检查账号角色
             if botHash in relations:
                 # 从账号
                 masterHash = relations[botHash]
-                master_name = get_bot_display_name(masterHash, bot_info_dict[masterHash]) if masterHash in bot_info_dict else "未知"
+                master_name = get_bot_display_name(masterHash, bot_info_dict[masterHash], plugin_event) if masterHash in bot_info_dict else "未知"
                 result_lines.append(f"[从账号] {bot_name}({bot_id})")
                 result_lines.append(f"  Hash: {botHash}")
                 result_lines.append(f"  主账号: {master_name} ({masterHash})")
@@ -209,7 +227,7 @@ def listAccountRelations(bot_info_dict):
                 result_lines.append(f"  Hash: {botHash}")
                 result_lines.append(f"  从账号数量: {len(master_to_slaves[botHash])}")
                 for slave in master_to_slaves[botHash]:
-                    slave_name = get_bot_display_name(slave, bot_info_dict[slave]) if slave in bot_info_dict else "未知"
+                    slave_name = get_bot_display_name(slave, bot_info_dict[slave], plugin_event) if slave in bot_info_dict else "未知"
                     result_lines.append(f"    - {slave_name} ({slave})")
             else:
                 # 独立账号
@@ -220,14 +238,14 @@ def listAccountRelations(bot_info_dict):
     except Exception as e:
         return f"列出账号关系失败: {str(e)}"
 
-def showAccountInfo(botHash, bot_info_dict):
+def showAccountInfo(botHash, bot_info_dict, plugin_event=None):
     """
     显示指定账号的详细信息
     """
     try:
         if botHash not in bot_info_dict:
             return f"未找到账号: {botHash}"
-        bot_name = get_bot_display_name(botHash, bot_info_dict[botHash])
+        bot_name = get_bot_display_name(botHash, bot_info_dict[botHash], plugin_event)
         bot_id = bot_info_dict[botHash].id if hasattr(bot_info_dict[botHash], 'id') else "未知"
         result_lines = []
         result_lines.append(f"=== 账号信息 ===")
@@ -240,7 +258,7 @@ def showAccountInfo(botHash, bot_info_dict):
         if masterHash:
             # 从账号
             result_lines.append(f"角色: 从账号")
-            master_name = get_bot_display_name(masterHash, bot_info_dict[masterHash]) if masterHash in bot_info_dict else "未知"
+            master_name = get_bot_display_name(masterHash, bot_info_dict[masterHash], plugin_event) if masterHash in bot_info_dict else "未知"
             result_lines.append(f"主账号: {master_name} ({masterHash})")
             result_lines.append(f"数据重定向: 已启用")
         else:
@@ -254,7 +272,7 @@ def showAccountInfo(botHash, bot_info_dict):
                 result_lines.append(f"角色: 主账号")
                 result_lines.append(f"从账号数量: {len(slaves)}")
                 for slave in slaves:
-                    slave_name = get_bot_display_name(slave, bot_info_dict[slave]) if slave in bot_info_dict else "未知"
+                    slave_name = get_bot_display_name(slave, bot_info_dict[slave], plugin_event) if slave in bot_info_dict else "未知"
                     result_lines.append(f"  - {slave_name} ({slave})")
             else:
                 result_lines.append(f"角色: 独立账号")

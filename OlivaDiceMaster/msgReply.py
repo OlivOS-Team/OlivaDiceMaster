@@ -770,7 +770,7 @@ def unity_reply(plugin_event, Proc):
                     replyMsgLazyHelpByEvent(plugin_event, 'account')
                     return
             elif isMatchWordStart(tmp_reast_str, 'list', fullMatch = True):
-                result = OlivaDiceMaster.accountManager.listAccountRelations(Proc.Proc_data['bot_info_dict'])
+                result = OlivaDiceMaster.accountManager.listAccountRelations(Proc.Proc_data['bot_info_dict'], plugin_event)
                 dictTValue['tAccountResult'] = result
                 tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountList'], dictTValue)
                 replyMsg(plugin_event, tmp_reply_str)
@@ -783,7 +783,7 @@ def unity_reply(plugin_event, Proc):
                     botHash = tmp_reast_str
                 else:
                     botHash = plugin_event.bot_info.hash
-                result = OlivaDiceMaster.accountManager.showAccountInfo(botHash, Proc.Proc_data['bot_info_dict'])
+                result = OlivaDiceMaster.accountManager.showAccountInfo(botHash, Proc.Proc_data['bot_info_dict'], plugin_event)
                 dictTValue['tAccountResult'] = result
                 tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountShow'], dictTValue)
                 replyMsg(plugin_event, tmp_reply_str)
