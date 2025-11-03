@@ -32,8 +32,9 @@ def get_bot_display_name(botHash, bot_info, plugin_event=None):
     bot_name = "未知"
     # 优先通过API调用获取名称
     try:
-        # 如果plugin_event为None，构建fake_event
-        if plugin_event is None:
+        # 如果plugin_event为None，或者plugin_event的bot_info与目标botHash不匹配，构建fake_event
+        # 这样可以确保获取的是正确账号的名称
+        if plugin_event is None or (hasattr(plugin_event, 'bot_info') and plugin_event.bot_info.hash != botHash):
             fake_event = OlivOS.API.Event(
                 OlivOS.contentAPI.fake_sdk_event(
                     bot_info=bot_info,
