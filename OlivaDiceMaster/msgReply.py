@@ -743,7 +743,7 @@ def unity_reply(plugin_event, Proc):
                 if len(tmp_reast_str_list) >= 2:
                     slaveBotHash = tmp_reast_str_list[0].strip()
                     masterBotHash = tmp_reast_str_list[1].strip()
-                    success, result = OlivaDiceMaster.accountManager.linkAccount(slaveBotHash, masterBotHash)
+                    success, result = OlivaDiceMaster.accountManager.linkAccount(slaveBotHash, masterBotHash, Proc.Proc_data['bot_info_dict'])
                     dictTValue['tAccountResult'] = result
                     if success:
                         tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountLinkSuccess'], dictTValue)
@@ -759,7 +759,7 @@ def unity_reply(plugin_event, Proc):
                 tmp_reast_str = tmp_reast_str.strip()
                 if tmp_reast_str:
                     slaveBotHash = tmp_reast_str
-                    success, result = OlivaDiceMaster.accountManager.unlinkAccount(slaveBotHash)
+                    success, result = OlivaDiceMaster.accountManager.unlinkAccount(slaveBotHash, Proc.Proc_data['bot_info_dict'])
                     dictTValue['tAccountResult'] = result
                     if success:
                         tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterAccountUnlinkSuccess'], dictTValue)

@@ -76,11 +76,9 @@ def checkCircularDependency(slaveBotHash, masterBotHash, relations):
     """
     检查是否存在循环依赖
     """
-    # 检查自引用
     if slaveBotHash == masterBotHash:
         return True, "从账号和主账号不能相同"
-    
-    # 检查1：从masterBotHash向上查找，看是否会在链中遇到slaveBotHash
+    # 从masterBotHash向上查找，看是否会在链中遇到slaveBotHash
     # 如果masterBotHash已经是slaveBotHash的从账号（通过关系链），会产生循环
     visited = set()
     current = masterBotHash
@@ -95,7 +93,7 @@ def checkCircularDependency(slaveBotHash, masterBotHash, relations):
         # 继续向上查找
         current = relations.get(current)
     
-    # 检查2：从slaveBotHash向上查找，看是否会在链中遇到masterBotHash
+    # 从slaveBotHash向上查找，看是否会在链中遇到masterBotHash
     # 如果slaveBotHash已经是masterBotHash的从账号（通过关系链），会产生循环
     # 例如：当前关系 A -> B，要建立 B -> A，会形成 A -> B -> A 的循环
     visited2 = set()
@@ -110,7 +108,7 @@ def checkCircularDependency(slaveBotHash, masterBotHash, relations):
         # 继续向上查找
         current2 = relations.get(current2)
     
-    # 检查3：检查slaveBotHash的所有从账号，看它们是否会在链中回到masterBotHash或其上级
+    # 检查slaveBotHash的所有从账号，看它们是否会在链中回到masterBotHash或其上级
     # 这是为了防止形成如下的循环：A -> B -> C，然后建立 C -> A 会形成 A -> B -> C -> A
     # 找到所有以slaveBotHash为主账号的从账号
     slaveBotHash_slaves = [s for s, m in relations.items() if m == slaveBotHash]
@@ -139,37 +137,43 @@ def checkCircularDependency(slaveBotHash, masterBotHash, relations):
             current_slave = relations.get(current_slave)
     return False, ""
 
-def linkAccount(slaveBotHash, masterBotHash):
+def linkAccount(slaveBotHash, masterBotHash, bot_info_dict=None):
     """
     建立主从关系
     """
     try:
+        # 验证hash是否存在
+        if bot_info_dict is not None:
+            if slaveBotHash not in bot_info_dict:
+                return False, f"从账号 {slaveBotHash} 不存在于当前进程的账号列表中"
+            if masterBotHash not in bot_info_dict:
+                return False, f"主账号 {masterBotHash} 不存在于当前进程的账号列表中"
         # 获取当前的关系配置
         relations = OlivaDiceCore.console.getAllAccountRelations()
-        # 规则0：检查账号不能为unity
+        # 检查账号不能为unity
         # 无论是主账号还是从账号都不能为unity
         if slaveBotHash.lower() == "unity":
             return False, "从账号不能为unity"
         if masterBotHash.lower() == "unity":
             return False, "主账号不能为unity"
-        # 规则1：检查slaveBotHash是否已经是某个账号的从账号
+        # 检查slaveBotHash是否已经是某个账号的从账号
         # 一个从账号不能有多个主账号，必须先断联才能建立新关系
         if slaveBotHash in relations:
             current_master = relations[slaveBotHash]
             return False, f"账号 {slaveBotHash} 已经是 {current_master} 的从账号，请先断开关系"
-        # 规则2：检查slaveBotHash是否已经有从账号（主账号不能成为从账号）
+        # 检查slaveBotHash是否已经有从账号（主账号不能成为从账号）
         # 找到所有以slaveBotHash为主账号的从账号
         slaveBotHash_slaves = [s for s, m in relations.items() if m == slaveBotHash]
         if slaveBotHash_slaves:
             slave_count = len(slaveBotHash_slaves)
             return False, f"账号 {slaveBotHash} 已经是 {slave_count} 个账号的主账号，主账号不能成为从账号"
-        # 规则3：检查masterBotHash是否已经是某个账号的从账号
+        # 检查masterBotHash是否已经是某个账号的从账号
         # 如果masterBotHash是从账号，则它不能作为主账号接受新的从账号
         # （因为一个从账号不能有多个主账号，且主账号不能成为从账号）
         if masterBotHash in relations:
             master_master = relations[masterBotHash]
             return False, f"账号 {masterBotHash} 已经是 {master_master} 的从账号，从账号不能作为主账号"
-        # 检查循环依赖（额外保障）
+        # 检查循环依赖（按理来说应该是不会出现这种情况，不过还是检查一遍更保险）
         hasCircular, errorMsg = checkCircularDependency(slaveBotHash, masterBotHash, relations)
         if hasCircular:
             return False, errorMsg
@@ -180,12 +184,15 @@ def linkAccount(slaveBotHash, masterBotHash):
     except Exception as e:
         return False, f"建立主从关系失败: {str(e)}"
 
-def unlinkAccount(slaveBotHash):
+def unlinkAccount(slaveBotHash, bot_info_dict=None):
     """
     断开主从关系
     """
     try:
-        # 检查是否存在关系
+        # 验证hash是否存在
+        if bot_info_dict is not None:
+            if slaveBotHash not in bot_info_dict:
+                return False, f"账号 {slaveBotHash} 不存在于当前进程的账号列表中"
         masterBotHash = OlivaDiceCore.console.getMasterBotHash(slaveBotHash)
         if not masterBotHash:
             return False, f"账号 {slaveBotHash} 未建立主从关系"
@@ -284,17 +291,15 @@ def showAccountInfo(botHash, bot_info_dict, plugin_event=None):
 
 def exportAccountData(sourceBotHash, Proc, export_path=None):
     """
-    导出账号数据（压缩包形式）
+    压缩包导出账号数据
     """
     try:
-        # 检查源账号是否存在
         source_dir = os.path.join(OlivaDiceCore.data.dataDirRoot, sourceBotHash)
         if not os.path.exists(source_dir):
             return False, f"源账号数据不存在: {sourceBotHash}"
         export_root = OlivaDiceMaster.data.exportPath
         # 确定导出路径
         if export_path is None:
-            # 使用默认路径
             if not os.path.exists(export_root):
                 os.makedirs(export_root)
             export_path = os.path.join(export_root, f"account_export_{sourceBotHash}.zip")
@@ -318,10 +323,10 @@ def exportAccountData(sourceBotHash, Proc, export_path=None):
 
 def importAccountData(sourceBotHash, targetBotHash, Proc, overwrite=False):
     """
-    导入账号数据（从现有账号）
+    从现有账号导入账号数据
     """
     try:
-        # 检查账号不能为unity（大小写模糊）
+        # 检查账号不能为unity
         if sourceBotHash.lower() == "unity":
             return False, "源账号不能为unity"
         if targetBotHash.lower() == "unity":
@@ -493,19 +498,18 @@ def _copyAndReplaceBotHash(source_dir, target_dir, sourceBotHash, targetBotHash)
         for file in files:
             source_file = os.path.join(root, file)
             target_file = os.path.join(current_target_dir, file)
-            # 处理JSON文件：替换BotHash并过滤黑名单数据
-            if file.endswith('.json'):
-                try:
-                    with open(source_file, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                    processed_data = _procesJsonData(data, sourceBotHash, targetBotHash, blacklist_keys)
-                    with open(target_file, 'w', encoding='utf-8') as f:
-                        json.dump(processed_data, f, ensure_ascii=False, indent=4)
-                except Exception as e:
-                    # 如果处理失败
-                    shutil.copy2(source_file, target_file)
-            else:
-                # 非JSON文件直接复制
+            # 替换BotHash并过滤黑名单数据
+            try:
+                with open(source_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                # 如果成功解析为JSON，进行JSON数据处理
+                processed_data = _procesJsonData(data, sourceBotHash, targetBotHash, blacklist_keys)
+                with open(target_file, 'w', encoding='utf-8') as f:
+                    json.dump(processed_data, f, ensure_ascii=False, indent=4)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                # 其余直接复制
+                shutil.copy2(source_file, target_file)
+            except Exception as e:
                 shutil.copy2(source_file, target_file)
 
 def _procesJsonData(data, sourceBotHash, targetBotHash, blacklist_keys):
