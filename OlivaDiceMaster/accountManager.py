@@ -188,19 +188,31 @@ def linkAccount(slaveBotHash, masterBotHash, bot_info_dict=None):
 def unlinkAccount(slaveBotHash, bot_info_dict=None):
     """
     断开主从关系
+    如果账号是主账号，断开所有以它为主账号的从账号关系
+    如果账号是从账号，断开它与主账号的关系
     """
     try:
-        # 验证hash是否存在
         if bot_info_dict is not None:
             if slaveBotHash not in bot_info_dict:
                 return False, f"账号 {slaveBotHash} 不存在于当前进程的账号列表中"
+        relations = OlivaDiceCore.console.getAllAccountRelations()
+        # 检查是否是主账号
+        slaves = [slave for slave, master in relations.items() if master == slaveBotHash]
+        if slaves:
+            # 是主账号，断开所有从账号与它的关系
+            for slave in slaves:
+                OlivaDiceCore.console.removeAccountRelation(slave)
+            OlivaDiceCore.console.saveAccountRelationConfig()
+            return True, f"已断开主从关系: 主账号 {slaveBotHash} 与 {len(slaves)} 个从账号的关系已断开"
+        # 检查是否是从账号
         masterBotHash = OlivaDiceCore.console.getMasterBotHash(slaveBotHash)
-        if not masterBotHash:
-            return False, f"账号 {slaveBotHash} 未建立主从关系"
-        # 删除主从关系
-        OlivaDiceCore.console.removeAccountRelation(slaveBotHash)
-        OlivaDiceCore.console.saveAccountRelationConfig()
-        return True, f"已断开主从关系: {slaveBotHash}(从) ->/<- {masterBotHash}(主)"
+        if masterBotHash:
+            # 是从账号，断开与主账号的关系
+            OlivaDiceCore.console.removeAccountRelation(slaveBotHash)
+            OlivaDiceCore.console.saveAccountRelationConfig()
+            return True, f"已断开主从关系: {slaveBotHash}(从) ->/<- {masterBotHash}(主)"
+        # 既不是主账号也不是从账号
+        return False, f"账号 {slaveBotHash} 未建立主从关系"
     except Exception as e:
         return False, f"断开主从关系失败: {str(e)}"
 
@@ -305,10 +317,8 @@ def exportAccountData(sourceBotHash, Proc, export_path=None):
                 os.makedirs(export_root)
             export_path = os.path.join(export_root, f"account_export_{sourceBotHash}.zip")
         else:
-            # 如果用户提供的是目录，自动添加文件名
             if os.path.isdir(export_path):
                 export_path = os.path.join(export_path, f"account_export_{sourceBotHash}.zip")
-        # 如果目标文件已存在，先删除
         if os.path.exists(export_path):
             os.remove(export_path)
         # 创建压缩包
@@ -318,7 +328,7 @@ def exportAccountData(sourceBotHash, Proc, export_path=None):
                     file_path = os.path.join(root, file)
                     relative_path = os.path.relpath(file_path, source_dir)
                     zipf.write(file_path, relative_path)
-        return True, f"账号数据已导出到: {export_path}"
+        return True, f"账号数据已导出到: {export_path.replace(chr(92), '/')}"
     except Exception as e:
         return False, f"导出账号数据失败: {str(e)}"
 
@@ -332,22 +342,31 @@ def importAccountData(sourceBotHash, targetBotHash, Proc, overwrite=False):
             return False, "源账号不能为unity"
         if targetBotHash.lower() == "unity":
             return False, "目标账号不能为unity"
+        # 获取进程内的账号列表并验证
+        bot_info_dict = None
+        if Proc:
+            try:
+                bot_info_dict = Proc.Proc_data.get('bot_info_dict', None)
+            except:
+                pass
+        if bot_info_dict is not None:
+            if sourceBotHash not in bot_info_dict:
+                return False, f"源账号 {sourceBotHash} 不存在于当前进程的账号列表中"
+            if targetBotHash not in bot_info_dict:
+                return False, f"目标账号 {targetBotHash} 不存在于当前进程的账号列表中"
         # 检查源账号数据是否存在
         source_dir = os.path.join(OlivaDiceCore.data.dataDirRoot, sourceBotHash)
         if not os.path.exists(source_dir):
             return False, f"源账号数据不存在: {sourceBotHash}"
         # 创建目标目录
         target_dir = os.path.join(OlivaDiceCore.data.dataDirRoot, targetBotHash)
-        # 备份目标账号数据（如果存在）
+        # 备份目标账号数据
         backup_path = None
         if os.path.exists(target_dir):
             backup_base_dir = OlivaDiceMaster.data.exportPath
-            # 生成备份文件名
             backup_filename = f"account_import_{targetBotHash}.zip"
             backup_path = os.path.join(backup_base_dir, backup_filename)
-            # 确保备份目录存在
             os.makedirs(backup_base_dir, exist_ok=True)
-            # 如果备份文件已存在，删除它
             if os.path.exists(backup_path):
                 os.remove(backup_path)
             # 创建压缩备份
@@ -358,7 +377,7 @@ def importAccountData(sourceBotHash, targetBotHash, Proc, overwrite=False):
                         relative_path = os.path.relpath(file_path, target_dir)
                         zipf.write(file_path, relative_path)
             if Proc:
-                Proc.log(2, f"已备份目标账号数据到: {backup_path}")
+                Proc.log(2, f"已备份目标账号数据到: {backup_path.replace(chr(92), '/')}")
             if overwrite:
                 shutil.rmtree(target_dir)
         # 复制数据并替换BotHash
@@ -374,7 +393,7 @@ def importAccountData(sourceBotHash, targetBotHash, Proc, overwrite=False):
                 Proc.log(3, f"重新加载数据时出现警告: {str(reload_error)}")
         result_msg = f"账号数据已从 {sourceBotHash} 导入到 {targetBotHash}"
         if backup_path:
-            result_msg += f"\n备份已保存到: {backup_path}"
+            result_msg += f"\n备份已保存到: {backup_path.replace(chr(92), '/')}"
         return True, result_msg
     except Exception as e:
         return False, f"导入账号数据失败: {str(e)}"
@@ -394,7 +413,7 @@ def importAccountDataFromZip(zip_path, targetBotHash, Proc, overwrite=False, sou
         match = re.match(r'account_(?:export_|import_)?([a-f0-9]+)\.zip', filename, re.IGNORECASE)
         if match:
             auto_detected_hash = match.group(1)
-        # 如果提供了sourceBotHash，使用提供的；否则使用自动识别的
+        # 如果提供了sourceBotHash，使用提供的Hash；否则使用自动识别的Hash
         if sourceBotHash:
             detected_source_hash = sourceBotHash
         else:
@@ -404,6 +423,17 @@ def importAccountDataFromZip(zip_path, targetBotHash, Proc, overwrite=False, sou
             return False, "源账号不能为unity", auto_detected_hash
         if targetBotHash.lower() == "unity":
             return False, "目标账号不能为unity", auto_detected_hash
+        # 获取进程内的账号列表并验证
+        bot_info_dict = None
+        if Proc:
+            try:
+                bot_info_dict = Proc.Proc_data.get('bot_info_dict', None)
+            except:
+                pass
+        # 验证目标账号是否在进程内
+        if bot_info_dict is not None:
+            if targetBotHash not in bot_info_dict:
+                return False, f"目标账号 {targetBotHash} 不存在于当前进程的账号列表中", auto_detected_hash
         temp_dir = tempfile.mkdtemp()
         try:
             # 解压到临时目录
@@ -419,28 +449,22 @@ def importAccountDataFromZip(zip_path, targetBotHash, Proc, overwrite=False, sou
             source_dir = temp_dir
             subdirs = [d for d in os.listdir(temp_dir) if os.path.isdir(os.path.join(temp_dir, d))]
             if len(subdirs) == 1:
-                # 如果只有一个子目录，可能是压缩包的顶层目录
                 potential_source = os.path.join(temp_dir, subdirs[0])
-                # 检查是否包含典型的数据结构
                 if os.path.exists(os.path.join(potential_source, 'user')) or \
                    os.path.exists(os.path.join(potential_source, 'console')) or \
                    os.path.exists(os.path.join(potential_source, 'extend')):
                     source_dir = potential_source
             # 创建目标目录
             target_dir = os.path.join(OlivaDiceCore.data.dataDirRoot, targetBotHash)
-            # 备份目标账号数据（如果存在）
+            # 备份目标账号数据
             backup_path = None
             if os.path.exists(target_dir):
-                # 使用与导出相同的路径
                 backup_base_dir = OlivaDiceMaster.data.exportPath
                 backup_filename = f"account_import_{targetBotHash}.zip"
                 backup_path = os.path.join(backup_base_dir, backup_filename)
-                # 确保备份目录存在
                 os.makedirs(backup_base_dir, exist_ok=True)
-                # 如果备份文件已存在，删除它
                 if os.path.exists(backup_path):
                     os.remove(backup_path)
-                # 创建压缩备份
                 with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
                     for root, dirs, files in os.walk(target_dir):
                         for file in files:
@@ -448,7 +472,7 @@ def importAccountDataFromZip(zip_path, targetBotHash, Proc, overwrite=False, sou
                             relative_path = os.path.relpath(file_path, target_dir)
                             zipf.write(file_path, relative_path)
                 if Proc:
-                    Proc.log(2, f"已备份目标账号数据到: {backup_path}")
+                    Proc.log(2, f"已备份目标账号数据到: {backup_path.replace(chr(92), '/')}")
                 if overwrite:
                     shutil.rmtree(target_dir)
             # 获取源Hash
@@ -465,10 +489,9 @@ def importAccountDataFromZip(zip_path, targetBotHash, Proc, overwrite=False, sou
             except Exception as reload_error:
                 if Proc:
                     Proc.log(3, f"重新加载数据时出现警告: {str(reload_error)}")
-            # 生成返回消息
             result_msg = f"账号数据已从压缩包导入到 {targetBotHash}\n源账号Hash: {detected_source_hash} -> 目标账号Hash: {targetBotHash}"
             if backup_path:
-                result_msg += f"\n备份已保存到: {backup_path}"
+                result_msg += f"\n备份已保存到: {backup_path.replace(chr(92), '/')}"
             return True, result_msg, auto_detected_hash
         finally:
             # 清理临时目录
@@ -476,7 +499,6 @@ def importAccountDataFromZip(zip_path, targetBotHash, Proc, overwrite=False, sou
                 shutil.rmtree(temp_dir)
             except:
                 pass
-    
     except Exception as e:
         return False, f"从压缩包导入账号数据失败: {str(e)}", None
 
@@ -484,7 +506,7 @@ def copyAndReplaceBotHash(source_dir, target_dir, sourceBotHash, targetBotHash):
     """
     复制目录并替换其中的BotHash
     """
-    # 第一步：清空目标目录
+    # 清空目标目录
     if os.path.exists(target_dir):
         for root, dirs, files in os.walk(target_dir):
             for file in files:
@@ -495,7 +517,7 @@ def copyAndReplaceBotHash(source_dir, target_dir, sourceBotHash, targetBotHash):
                     pass
     else:
         os.makedirs(target_dir)
-    # 全盘复制源数据到目标目录
+    # 复制源数据到目标目录
     for root, dirs, files in os.walk(source_dir):
         rel_path = os.path.relpath(root, source_dir)
         if rel_path == '.':
@@ -508,7 +530,7 @@ def copyAndReplaceBotHash(source_dir, target_dir, sourceBotHash, targetBotHash):
             source_file = os.path.join(root, file)
             target_file = os.path.join(current_target_dir, file)
             shutil.copy2(source_file, target_file)
-    # 处理user文件夹内的JSON文件
+    # 处理user文件夹内的文件
     user_dir = os.path.join(target_dir, 'user')
     if os.path.exists(user_dir):
         for file in os.listdir(user_dir):
@@ -516,7 +538,7 @@ def copyAndReplaceBotHash(source_dir, target_dir, sourceBotHash, targetBotHash):
             # 跳过目录
             if os.path.isdir(file_path):
                 continue
-            # 尝试解析JSON文件
+            # 解析JSON文件
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
