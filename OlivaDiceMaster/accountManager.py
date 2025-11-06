@@ -24,6 +24,7 @@ import shutil
 import re
 import zipfile
 import tempfile
+import copy
 
 def get_bot_display_name(botHash, bot_info, plugin_event=None):
     """
@@ -361,7 +362,7 @@ def importAccountData(sourceBotHash, targetBotHash, Proc, overwrite=False):
             if overwrite:
                 shutil.rmtree(target_dir)
         # 复制数据并替换BotHash
-        _copyAndReplaceBotHash(source_dir, target_dir, sourceBotHash, targetBotHash)
+        copyAndReplaceBotHash(source_dir, target_dir, sourceBotHash, targetBotHash)
         # 重新加载数据到内存
         try:
             OlivaDiceCore.userConfig.dataUserConfigLoadAll()
@@ -454,7 +455,7 @@ def importAccountDataFromZip(zip_path, targetBotHash, Proc, overwrite=False, sou
             if not detected_source_hash:
                 return False, "无法识别源账号Hash，请手动指定", auto_detected_hash
             # 复制数据并替换BotHash
-            _copyAndReplaceBotHash(source_dir, target_dir, detected_source_hash, targetBotHash)
+            copyAndReplaceBotHash(source_dir, target_dir, detected_source_hash, targetBotHash)
             # 重新加载数据到内存
             try:
                 OlivaDiceCore.userConfig.dataUserConfigLoadAll()
@@ -479,13 +480,22 @@ def importAccountDataFromZip(zip_path, targetBotHash, Proc, overwrite=False, sou
     except Exception as e:
         return False, f"从压缩包导入账号数据失败: {str(e)}", None
 
-def _copyAndReplaceBotHash(source_dir, target_dir, sourceBotHash, targetBotHash):
+def copyAndReplaceBotHash(source_dir, target_dir, sourceBotHash, targetBotHash):
     """
     复制目录并替换其中的BotHash
     """
-    # 黑名单：这些数据不应该被导入
-    blacklist_keys = OlivaDiceCore.userConfig.dictRedirectBlacklist
-    # 遍历源目录
+    # 第一步：清空目标目录
+    if os.path.exists(target_dir):
+        for root, dirs, files in os.walk(target_dir):
+            for file in files:
+                file_path = os.path.join(root, file)
+                try:
+                    os.remove(file_path)
+                except:
+                    pass
+    else:
+        os.makedirs(target_dir)
+    # 全盘复制源数据到目标目录
     for root, dirs, files in os.walk(source_dir):
         rel_path = os.path.relpath(root, source_dir)
         if rel_path == '.':
@@ -494,45 +504,75 @@ def _copyAndReplaceBotHash(source_dir, target_dir, sourceBotHash, targetBotHash)
             current_target_dir = os.path.join(target_dir, rel_path)
         if not os.path.exists(current_target_dir):
             os.makedirs(current_target_dir)
-        # 复制文件
         for file in files:
             source_file = os.path.join(root, file)
             target_file = os.path.join(current_target_dir, file)
-            # 替换BotHash并过滤黑名单数据
+            shutil.copy2(source_file, target_file)
+    # 处理user文件夹内的JSON文件
+    user_dir = os.path.join(target_dir, 'user')
+    if os.path.exists(user_dir):
+        for file in os.listdir(user_dir):
+            file_path = os.path.join(user_dir, file)
+            # 跳过目录
+            if os.path.isdir(file_path):
+                continue
+            # 尝试解析JSON文件
             try:
-                with open(source_file, 'r', encoding='utf-8') as f:
+                with open(file_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                # 如果成功解析为JSON，进行JSON数据处理
-                processed_data = _procesJsonData(data, sourceBotHash, targetBotHash, blacklist_keys)
-                with open(target_file, 'w', encoding='utf-8') as f:
+                # 删除导入hash，替换源hash为新hash
+                processed_data = procesJsonData(data, sourceBotHash, targetBotHash)
+                with open(file_path, 'w', encoding='utf-8') as f:
                     json.dump(processed_data, f, ensure_ascii=False, indent=4)
             except (json.JSONDecodeError, UnicodeDecodeError):
-                # 其余直接复制
-                shutil.copy2(source_file, target_file)
-            except Exception as e:
-                shutil.copy2(source_file, target_file)
+                continue
+            except Exception:
+                continue
 
-def _procesJsonData(data, sourceBotHash, targetBotHash, blacklist_keys):
+def procesJsonData(data, sourceBotHash, targetBotHash):
     """
-    递归处理JSON数据，替换BotHash并过滤黑名单数据
+    递归处理JSON数据，替换BotHash
+    如果targetBotHash == sourceBotHash，直接跳过，保留所有hash
+    如果targetBotHash != sourceBotHash：
+    - 删除targetBotHash的键（如果存在）
+    - 将sourceBotHash的值复制一份，一份保持原样（sourceBotHash），一份经过处理后作为targetBotHash
+    - 保留其他hash键
+    - 递归处理值中的字符串，替换hash
     """
+    # 如果目标hash和源hash相同，直接跳过，不做任何处理
+    if targetBotHash == sourceBotHash:
+        return data
     if isinstance(data, dict):
         result = {}
+        source_value = None
         for key, value in data.items():
-            # 跳过黑名单中的键
-            if key == 'configNote' and isinstance(value, dict):
-                # 过滤掉黑名单中的配置项
-                filtered_config = {k: v for k, v in value.items() if k not in blacklist_keys}
-                if filtered_config:
-                    result[key] = _procesJsonData(filtered_config, sourceBotHash, targetBotHash, blacklist_keys)
-            elif key not in blacklist_keys:
-                result[key] = _procesJsonData(value, sourceBotHash, targetBotHash, blacklist_keys)
+            # 如果key就是targetBotHash，删除这个键（跳过）
+            if key == targetBotHash:
+                continue
+            # 如果key就是sourceBotHash，先保存值，稍后处理
+            if key == sourceBotHash:
+                source_value = value
+                # 先保留sourceBotHash原样（递归处理值）
+                processed_source_value = procesJsonData(value, sourceBotHash, targetBotHash)
+                result[sourceBotHash] = processed_source_value
+            else:
+                # 其他hash键保留，但需要递归处理值
+                processed_value = procesJsonData(value, sourceBotHash, targetBotHash)
+                result[key] = processed_value
+        # 如果找到了sourceBotHash，将其值复制一份作为targetBotHash
+        if source_value is not None:
+            copied_value = copy.deepcopy(source_value)
+            processed_copied_value = procesJsonData(copied_value, sourceBotHash, targetBotHash)
+            result[targetBotHash] = processed_copied_value
         return result
     elif isinstance(data, list):
-        return [_procesJsonData(item, sourceBotHash, targetBotHash, blacklist_keys) for item in data]
+        result = []
+        for item in data:
+            processed_item = procesJsonData(item, sourceBotHash, targetBotHash)
+            result.append(processed_item)
+        return result
     elif isinstance(data, str):
-        # 替换字符串中的BotHash
+        # 替换字符串中的源hash（sourceBotHash）为新hash（targetBotHash）
         return data.replace(sourceBotHash, targetBotHash)
     else:
         return data
-
