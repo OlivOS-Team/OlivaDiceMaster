@@ -79,68 +79,75 @@ def checkCircularDependency(slaveBotHash, masterBotHash, relations):
     """
     if slaveBotHash == masterBotHash:
         return True, "从账号和主账号不能相同"
-    # 从masterBotHash向上查找，看是否会在链中遇到slaveBotHash
-    # 如果masterBotHash已经是slaveBotHash的从账号（通过关系链），会产生循环
+    # 辅助函数：查找某个账号的主账号
+    def find_master(bot_hash):
+        for master, slaves in relations.items():
+            if bot_hash in slaves:
+                return master
+        return None
+    # 从 masterBotHash 向上查找，看是否会在链中遇到 slaveBotHash
     visited = set()
-    current = masterBotHash
-    
-    while current:
+    queue = [masterBotHash]
+    while queue:
+        current = queue.pop(0)
         if current == slaveBotHash:
             return True, "检测到循环依赖：主账号已经在从账号的关系链中"
         if current in visited:
-            # 已经访问过，说明遇到了其他环，检测到循环
-            return True, "检测到循环依赖：关系中已存在循环"
+            continue
         visited.add(current)
-        # 继续向上查找
-        current = relations.get(current)
-    
-    # 从slaveBotHash向上查找，看是否会在链中遇到masterBotHash
-    # 如果slaveBotHash已经是masterBotHash的从账号（通过关系链），会产生循环
-    # 例如：当前关系 A -> B，要建立 B -> A，会形成 A -> B -> A 的循环
+        # 获取 current 的主账号
+        master = find_master(current)
+        if master:
+            queue.append(master)
+    # 从 slaveBotHash 向上查找，看是否会在链中遇到 masterBotHash
     visited2 = set()
-    current2 = slaveBotHash
-    
-    while current2:
-        if current2 == masterBotHash:
+    queue2 = [slaveBotHash]
+    while queue2:
+        current = queue2.pop(0)
+        if current == masterBotHash:
             return True, "检测到循环依赖：从账号已经在主账号的关系链中"
-        if current2 in visited2:
-            return True, "检测到循环依赖：关系中已存在循环"
-        visited2.add(current2)
-        # 继续向上查找
-        current2 = relations.get(current2)
-    
-    # 检查slaveBotHash的所有从账号，看它们是否会在链中回到masterBotHash或其上级
-    # 这是为了防止形成如下的循环：A -> B -> C，然后建立 C -> A 会形成 A -> B -> C -> A
-    # 找到所有以slaveBotHash为主账号的从账号
-    slaveBotHash_slaves = [s for s, m in relations.items() if m == slaveBotHash]
+        if current in visited2:
+            continue
+        visited2.add(current)
+        # 获取 current 的主账号
+        master = find_master(current)
+        if master:
+            queue2.append(master)
+    # 检查 slaveBotHash 的所有从账号，看它们是否会在链中回到 masterBotHash
+    slaveBotHash_slaves = relations.get(slaveBotHash, [])
     for slave_of_slave in slaveBotHash_slaves:
         visited_slave = set()
-        current_slave = slave_of_slave
-        # 沿着主账号链向上查找
-        while current_slave:
+        queue_slave = [slave_of_slave]
+        while queue_slave:
+            current_slave = queue_slave.pop(0)
             if current_slave == masterBotHash:
                 return True, "检测到循环依赖：从账号的从账号已经在主账号的关系链中"
-            # 检查current_slave是否在masterBotHash的上级链中
-            # 沿着masterBotHash向上查找，看是否会遇到current_slave
+            if current_slave in visited_slave:
+                continue
+            visited_slave.add(current_slave)
+            # 检查 current_slave 是否在 masterBotHash 的上级链中
             visited_master = set()
-            check_master = masterBotHash
-            while check_master:
+            queue_master = [masterBotHash]
+            while queue_master:
+                check_master = queue_master.pop(0)
                 if check_master == current_slave:
                     return True, "检测到循环依赖：建立此关系后会形成循环"
                 if check_master in visited_master:
                     break
                 visited_master.add(check_master)
-                check_master = relations.get(check_master)
-            
-            if current_slave in visited_slave:
-                break
-            visited_slave.add(current_slave)
-            current_slave = relations.get(current_slave)
+                # 获取 check_master 的主账号
+                master = find_master(check_master)
+                if master:
+                    queue_master.append(master)
+            # 继续查找 current_slave 的主账号
+            master = find_master(current_slave)
+            if master:
+                queue_slave.append(master)
     return False, ""
 
 def linkAccount(slaveBotHash, masterBotHash, bot_info_dict=None):
     """
-    建立主从关系
+    建立主从关系（为从账号添加一个主账号）
     """
     try:
         # 验证hash是否存在
@@ -157,24 +164,21 @@ def linkAccount(slaveBotHash, masterBotHash, bot_info_dict=None):
             return False, "从账号不能为unity"
         if masterBotHash.lower() == "unity":
             return False, "主账号不能为unity"
-        # 检查slaveBotHash是否已经是某个账号的从账号
-        # 一个从账号不能有多个主账号，必须先断联才能建立新关系
-        if slaveBotHash in relations:
-            current_master = relations[slaveBotHash]
-            return False, f"账号 {slaveBotHash} 已经是 {current_master} 的从账号，请先断开关系"
-        # 检查slaveBotHash是否已经有从账号（主账号不能成为从账号）
-        # 找到所有以slaveBotHash为主账号的从账号
-        slaveBotHash_slaves = [s for s, m in relations.items() if m == slaveBotHash]
-        if slaveBotHash_slaves:
-            slave_count = len(slaveBotHash_slaves)
-            return False, f"账号 {slaveBotHash} 已经是 {slave_count} 个账号的主账号，主账号不能成为从账号"
-        # 检查masterBotHash是否已经是某个账号的从账号
-        # 如果masterBotHash是从账号，则它不能作为主账号接受新的从账号
-        # （因为一个从账号不能有多个主账号，且主账号不能成为从账号）
-        if masterBotHash in relations:
-            master_master = relations[masterBotHash]
+        # 检查 slaveBotHash 是否已经有主账号（一个从账号只能有一个主账号）
+        current_masters = OlivaDiceCore.console.getMasterBotHashList(slaveBotHash)
+        if current_masters:
+            if masterBotHash in current_masters:
+                return False, f"账号 {slaveBotHash} 已经是 {masterBotHash} 的从账号"
+            else:
+                current_master = current_masters[0]
+                return False, f"账号 {slaveBotHash} 已经是 {current_master} 的从账号，一个从账号只能有一个主账号，请先断开现有关系"
+        # 检查 masterBotHash 是否已经是某个账号的从账号
+        # 如果 masterBotHash 是从账号，则它不能作为主账号接受新的从账号
+        master_masters = OlivaDiceCore.console.getMasterBotHashList(masterBotHash)
+        if master_masters:
+            master_master = master_masters[0]
             return False, f"账号 {masterBotHash} 已经是 {master_master} 的从账号，从账号不能作为主账号"
-        # 检查循环依赖（按理来说应该是不会出现这种情况，不过还是检查一遍更保险）
+        # 检查循环依赖（保险起见）
         hasCircular, errorMsg = checkCircularDependency(slaveBotHash, masterBotHash, relations)
         if hasCircular:
             return False, errorMsg
@@ -185,30 +189,31 @@ def linkAccount(slaveBotHash, masterBotHash, bot_info_dict=None):
     except Exception as e:
         return False, f"建立主从关系失败: {str(e)}"
 
-def unlinkAccount(slaveBotHash, bot_info_dict=None):
+def unlinkAccount(slaveBotHash, masterBotHash=None, bot_info_dict=None):
     """
     断开主从关系
     如果账号是主账号，断开所有以它为主账号的从账号关系
-    如果账号是从账号，断开它与主账号的关系
+    如果账号是从账号，断开它与主账号的关系（从账号只会有一个主账号）
     """
     try:
         if bot_info_dict is not None:
             if slaveBotHash not in bot_info_dict:
                 return False, f"账号 {slaveBotHash} 不存在于当前进程的账号列表中"
         relations = OlivaDiceCore.console.getAllAccountRelations()
-        # 检查是否是主账号
-        slaves = [slave for slave, master in relations.items() if master == slaveBotHash]
-        if slaves:
+        
+        # 检查是否是主账号（在relations中是key）
+        if slaveBotHash in relations:
+            slaves = relations[slaveBotHash]
             # 是主账号，断开所有从账号与它的关系
-            for slave in slaves:
-                OlivaDiceCore.console.removeAccountRelation(slave)
+            slave_count = len(slaves)
+            del relations[slaveBotHash]
             OlivaDiceCore.console.saveAccountRelationConfig()
-            return True, f"已断开主从关系: 主账号 {slaveBotHash} 与 {len(slaves)} 个从账号的关系已断开"
-        # 检查是否是从账号
+            return True, f"已断开主从关系: 主账号 {slaveBotHash} 与 {slave_count} 个从账号的关系已断开"
+        # 检查是否是从账号（在某个主账号的value列表中）
         masterBotHash = OlivaDiceCore.console.getMasterBotHash(slaveBotHash)
         if masterBotHash:
             # 是从账号，断开与主账号的关系
-            OlivaDiceCore.console.removeAccountRelation(slaveBotHash)
+            OlivaDiceCore.console.removeAccountRelation(slaveBotHash, masterBotHash)
             OlivaDiceCore.console.saveAccountRelationConfig()
             return True, f"已断开主从关系: {slaveBotHash}(从) ->/<- {masterBotHash}(主)"
         # 既不是主账号也不是从账号
@@ -224,20 +229,16 @@ def listAccountRelations(bot_info_dict, plugin_event=None):
         relations = OlivaDiceCore.console.getAllAccountRelations()
         result_lines = []
         result_lines.append("=== 账号列表 ===")
-        # 创建主账号到从账号的映射
-        master_to_slaves = {}
-        for slave, master in relations.items():
-            if master not in master_to_slaves:
-                master_to_slaves[master] = []
-            master_to_slaves[master].append(slave)
+        # relations 已经是 master_to_slaves 格式
+        master_to_slaves = relations
         # 遍历所有账号
         for botHash in bot_info_dict:
             bot_name = get_bot_display_name(botHash, bot_info_dict[botHash], plugin_event)
             bot_id = bot_info_dict[botHash].id if hasattr(bot_info_dict[botHash], 'id') else "未知"
             # 检查账号角色
-            if botHash in relations:
+            masterHash = OlivaDiceCore.console.getMasterBotHash(botHash)
+            if masterHash:
                 # 从账号
-                masterHash = relations[botHash]
                 master_name = get_bot_display_name(masterHash, bot_info_dict[masterHash], plugin_event) if masterHash in bot_info_dict else "未知"
                 result_lines.append(f"[从账号] {bot_name}({bot_id})")
                 result_lines.append(f"  Hash: {botHash}")
@@ -283,12 +284,8 @@ def showAccountInfo(botHash, bot_info_dict, plugin_event=None):
             result_lines.append(f"主账号: {master_name} ({masterHash})")
             result_lines.append(f"数据重定向: 已启用")
         else:
-            # 主账号
-            slaves = []
-            for slave, master in relations.items():
-                if master == botHash:
-                    slaves.append(slave)
-            
+            # 主账号或独立账号
+            slaves = relations.get(botHash, [])
             if slaves:
                 result_lines.append(f"角色: 主账号")
                 result_lines.append(f"从账号数量: {len(slaves)}")
