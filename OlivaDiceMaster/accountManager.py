@@ -216,12 +216,9 @@ def unlinkAccount(slaveBotHash, masterBotHash=None, bot_info_dict=None):
         masterBotHash = OlivaDiceCore.console.getMasterBotHash(slaveBotHash)
         if masterBotHash:
             # 是从账号，断开与主账号的关系
-            remove_success = OlivaDiceCore.console.removeAccountRelation(slaveBotHash, masterBotHash)
-            if remove_success:
-                OlivaDiceCore.console.saveAccountRelationConfig()
-                return True, f"已断开主从关系: {slaveBotHash}(从) ->/<- {masterBotHash}(主)"
-            else:
-                return False, f"从关系列表中移除失败: {slaveBotHash} 不在 {masterBotHash} 的从账号列表中"
+            OlivaDiceCore.console.removeAccountRelation(slaveBotHash, masterBotHash)
+            OlivaDiceCore.console.saveAccountRelationConfig()
+            return True, f"已断开主从关系: {slaveBotHash}(从) ->/<- {masterBotHash}(主)"
         # 既不是主账号也不是从账号
         return False, f"账号 {slaveBotHash} 未建立主从关系"
     except Exception as e:
