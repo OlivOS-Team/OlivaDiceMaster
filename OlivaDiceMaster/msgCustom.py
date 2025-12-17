@@ -98,15 +98,7 @@ dictHelpDocTemp = {
 OlivaDice大师模块
 本模块为青果跑团掷骰机器人(OlivaDice)大师模块，集成与跑团无关的骰主管理功能功能（如指令更新等）。
 核心开发者: lunzhiPenxil仑质
-[.help OlivaDiceMaster更新] 查看本模块更新日志
 注: 本模块为可选重要模块。''',
-
-    'OlivaDiceMaster更新': '''[OlivaDiceMaster]
-3.0.5: 支持新版OlivOS
-3.0.4: 指令清群
-3.0.3: 反馈发送
-3.0.2: 模块获取
-3.0.0: 指令更新''',
 
     'oopm': '''青果包管理:
 本指令可以用于远程更新插件
