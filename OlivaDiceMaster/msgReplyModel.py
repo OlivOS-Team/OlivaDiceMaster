@@ -21,6 +21,37 @@ import os
 import shutil
 import time
 
+def find_plugin_path_recursive(base_path, namespace, max_depth=10):
+    """
+    递归查找插件的实际路径
+    """
+    def search_recursive(current_path, current_depth):
+        if current_depth > max_depth:
+            return (None, None)
+        try:
+            items = os.listdir(current_path)
+        except:
+            return (None, None)
+        opk_file = namespace + '.opk'
+        if opk_file in items:
+            return ('opk', os.path.join(current_path, opk_file))
+        if namespace in items:
+            src_path = os.path.join(current_path, namespace)
+            if os.path.isdir(src_path):
+                app_json = os.path.join(src_path, 'app.json')
+                if os.path.exists(app_json):
+                    return ('src', src_path)
+        for item in items:
+            if item.startswith('.'):
+                continue
+            item_path = os.path.join(current_path, item)
+            if os.path.isdir(item_path):
+                result = search_recursive(item_path, current_depth + 1)
+                if result[0] != None:
+                    return result
+        return (None, None)
+    return search_recursive(base_path, 0)
+
 def replyOOPM_ShowUpdate_command(
     plugin_event,
     Proc,
@@ -86,14 +117,14 @@ def replyOOPM_ShowUpdate_command(
                                     tmp_omodel_ver_target_version,
                                     tmp_omodel_ver_target_svn
                                 )
-                tmp_oopm_target_path = './plugin/app/%s.opk' % tmp_omodel_list_this[0]
+                plugin_exist_type, plugin_path = find_plugin_path_recursive('./plugin/app', tmp_omodel_list_this[0])
                 if tmp_omodel_list_this[1] == tmp_omodel_ver_target:
                     tmp_omodel_ver_compare = '=='
                 elif tmp_omodel_ver_target == 'N/A':
                     tmp_omodel_ver_compare = '=×'
-                if os.path.exists(tmp_oopm_target_path[:-4]):
+                if plugin_exist_type == 'src':
                     tmp_omodel_ver_compare = '[SRC]=×'
-                elif not os.path.exists(tmp_oopm_target_path):
+                elif plugin_exist_type == None:
                     tmp_omodel_ver_compare = '[DEV]=×'
                 tmp_reply_str_1_list.append(
                     '[%s]\n%s %s %s' % (
@@ -125,7 +156,12 @@ def replyOOPM_ShowUpdate_command(
                                 OlivaDiceCore.data.dataDirRoot,
                                 tmp_omodel_list_this[0]
                             )
-                            tmp_oopm_target_path = './plugin/app/%s.opk' % tmp_omodel_list_this[0]
+                            # 查找插件的实际位置，确定正确的路径
+                            plugin_exist_type_pre, plugin_actual_path_pre = find_plugin_path_recursive('./plugin/app', tmp_omodel_list_this[0])
+                            if plugin_exist_type_pre == 'opk' and plugin_actual_path_pre != None:
+                                tmp_oopm_target_path = plugin_actual_path_pre
+                            else:
+                                tmp_oopm_target_path = './plugin/app/%s.opk' % tmp_omodel_list_this[0]
                             if 'version' in tmp_api_data_model[tmp_omodel_list_this[0]][tmp_model_branch_select]:
                                 tmp_omodel_ver_target_version = tmp_api_data_model[tmp_omodel_list_this[0]][tmp_model_branch_select]['version']
                             if 'svn' in tmp_api_data_model[tmp_omodel_list_this[0]][tmp_model_branch_select]:
@@ -143,9 +179,10 @@ def replyOOPM_ShowUpdate_command(
                                     tmp_omodel_ver_compare = '=='
                                 elif tmp_omodel_ver_target == 'N/A':
                                     tmp_omodel_ver_compare = '=×'
-                                if os.path.exists(tmp_oopm_target_path[:-4]):
+                                plugin_exist_type, plugin_actual_path = find_plugin_path_recursive('./plugin/app', tmp_omodel_list_this[0])
+                                if plugin_exist_type == 'src':
                                     tmp_omodel_ver_compare = '[SRC]=×'
-                                elif not os.path.exists(tmp_oopm_target_path):
+                                elif plugin_exist_type == None:
                                     tmp_omodel_ver_compare = '[DEV]=×'
                                 dictTValue['tMasterOopkNameList'] = '[%s]\n%s %s %s' % (
                                     tmp_omodel_list_this[0],
