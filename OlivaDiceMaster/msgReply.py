@@ -608,11 +608,13 @@ def unity_reply(plugin_event, Proc):
                                     elif tmp_time_int >= 60:
                                         tmp_time_int = int(tmp_time_int / 60)
                                         tmp_time_type = '分钟'
+                                    # 时间格式化 - 清单
                                     tmp_time = '%s%s前' % (
                                         str(tmp_time_int),
                                         tmp_time_type
                                     )
-                                    tmp_time_1 = '%s%s' % (
+                                    # 时间格式化 - 执行后用户侧看到的
+                                    tmp_time_1 = '%s%s前' % (
                                         str(tmp_time_int),
                                         tmp_time_type
                                     )
