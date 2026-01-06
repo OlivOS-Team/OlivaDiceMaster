@@ -118,9 +118,11 @@ OlivaDice大师模块
 
     'groupclear': '''指令清群:
 .group clear [天数] 查找超过对应天数未触发的多人聊天
-.group clear do [天数] 清理超过对应天数未触发的多人聊天
+.group clear do [天数] (自定义消息) 清理超过对应天数未触发的多人聊天
 .group clear off 查找bot off的多人聊天
-.group clear do off 清理bot off的多人聊天''',
+.group clear do off (自定义消息) 清理bot off的多人聊天
+
+注：自定义消息为可选参数，如不提供则使用默认退群消息''',
 
     'backup': '''数据备份:
 .backup 查看备份配置和状态

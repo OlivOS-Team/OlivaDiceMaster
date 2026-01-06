@@ -501,11 +501,19 @@ def unity_reply(plugin_event, Proc):
                 tmp_reast_str = skipSpaceStart(tmp_reast_str)
                 flag_clear_mode = 'off'
             if flag_action =='clear' and flag_action_next != None:
-                tmp_reast_str.rstrip(' ')
+                tmp_reast_str = tmp_reast_str.rstrip(' ')
+                # 解析自定义回复消息
+                custom_reply_msg = ''
                 # 只有在time模式下才处理天数参数
                 if flag_clear_mode == 'time' and len(tmp_reast_str) > 0:
-                    if tmp_reast_str.isdigit():
-                        flag_clear_gate = 60 * 60 * 24 * int(tmp_reast_str)
+                    para_result = OlivaDiceCore.msgReply.getNumberPara(tmp_reast_str, reverse=False)
+                    number_part = para_result[1]
+                    custom_reply_msg = para_result[0].strip()
+                    if number_part and number_part.isdigit():
+                        flag_clear_gate = 60 * 60 * 24 * int(number_part)
+                elif flag_clear_mode == 'off' and len(tmp_reast_str) > 0:
+                    # off模式直接取剩余字符串作为自定义消息
+                    custom_reply_msg = tmp_reast_str.strip()
                 tmp_group_list = []
                 res = None
                 tmp_userPlatform = plugin_event.bot_info.platform['platform']
@@ -600,11 +608,13 @@ def unity_reply(plugin_event, Proc):
                                     elif tmp_time_int >= 60:
                                         tmp_time_int = int(tmp_time_int / 60)
                                         tmp_time_type = '分钟'
+                                    # 时间格式化 - 清单
                                     tmp_time = '%s%s前' % (
                                         str(tmp_time_int),
                                         tmp_time_type
                                     )
-                                    tmp_time_1 = '%s%s' % (
+                                    # 时间格式化 - 执行后用户侧看到的
+                                    tmp_time_1 = '%s%s前' % (
                                         str(tmp_time_int),
                                         tmp_time_type
                                     )
@@ -634,8 +644,11 @@ def unity_reply(plugin_event, Proc):
                                 tmp_botHash
                             )
                             for group_this in tmp_group_list_clear:
-                                dictTValue['tResult'] = tmp_group_list_clear[group_this]['time']
-                                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterGroupClearDoUnitSend'], dictTValue)
+                                if custom_reply_msg:
+                                    tmp_reply_str = custom_reply_msg
+                                else:
+                                    dictTValue['tResult'] = tmp_group_list_clear[group_this]['time']
+                                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterGroupClearDoUnitSend'], dictTValue)
                                 sendMsgByEvent(
                                     plugin_event,
                                     tmp_reply_str,
