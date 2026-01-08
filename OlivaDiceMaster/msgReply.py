@@ -507,8 +507,8 @@ def unity_reply(plugin_event, Proc):
                 # 只有在time模式下才处理天数参数
                 if flag_clear_mode == 'time' and len(tmp_reast_str) > 0:
                     para_result = OlivaDiceCore.msgReply.getNumberPara(tmp_reast_str, reverse=False)
-                    number_part = para_result[1]
-                    custom_reply_msg = para_result[0].strip()
+                    number_part = para_result[0]
+                    custom_reply_msg = para_result[1].strip()
                     if number_part and number_part.isdigit():
                         flag_clear_gate = 60 * 60 * 24 * int(number_part)
                 elif flag_clear_mode == 'off' and len(tmp_reast_str) > 0:
