@@ -142,26 +142,30 @@ def replyOOPM_ShowUpdate_command(
         elif flag_type == 'update':
             flag_done = True
             flag_need_done = False
+            update_plan_list = []
+            blocked_update = False
+            blocked_update_list = []
+            # 全局检查
             for tmp_omodel_list_this in tmp_omodel_list_select:
                 tmp_omodel_ver_target = 'N/A'
                 tmp_omodel_ver_compare = '=>'
+                tmp_omodel_ver_target_opk_path = None
                 flag_have_info = False
+                # 查找插件的实际位置，确定正确的目标路径
+                plugin_exist_type, plugin_actual_path = find_plugin_path_recursive('./plugin/app', tmp_omodel_list_this[0])
+                if plugin_exist_type == 'opk' and plugin_actual_path != None:
+                    tmp_oopm_target_path = plugin_actual_path
+                else:
+                    tmp_oopm_target_path = './plugin/app/%s.opk' % tmp_omodel_list_this[0]
+                tmp_download_tmp_path = '%s/unity/update/%s.opk' % (
+                    OlivaDiceCore.data.dataDirRoot,
+                    tmp_omodel_list_this[0]
+                )
                 if tmp_api_data_model != None:
                     if tmp_omodel_list_this[0] in tmp_api_data_model:
                         if tmp_model_branch_select in tmp_api_data_model[tmp_omodel_list_this[0]]:
                             tmp_omodel_ver_target_version = None
                             tmp_omodel_ver_target_svn = None
-                            tmp_omodel_ver_target_opk_path = None
-                            tmp_download_tmp_path = '%s/unity/update/%s.opk' % (
-                                OlivaDiceCore.data.dataDirRoot,
-                                tmp_omodel_list_this[0]
-                            )
-                            # 查找插件的实际位置，确定正确的路径
-                            plugin_exist_type_pre, plugin_actual_path_pre = find_plugin_path_recursive('./plugin/app', tmp_omodel_list_this[0])
-                            if plugin_exist_type_pre == 'opk' and plugin_actual_path_pre != None:
-                                tmp_oopm_target_path = plugin_actual_path_pre
-                            else:
-                                tmp_oopm_target_path = './plugin/app/%s.opk' % tmp_omodel_list_this[0]
                             if 'version' in tmp_api_data_model[tmp_omodel_list_this[0]][tmp_model_branch_select]:
                                 tmp_omodel_ver_target_version = tmp_api_data_model[tmp_omodel_list_this[0]][tmp_model_branch_select]['version']
                             if 'svn' in tmp_api_data_model[tmp_omodel_list_this[0]][tmp_model_branch_select]:
@@ -170,99 +174,126 @@ def replyOOPM_ShowUpdate_command(
                                 tmp_omodel_ver_target_opk_path = tmp_api_data_model[tmp_omodel_list_this[0]][tmp_model_branch_select]['opk_path']
                             if tmp_omodel_ver_target_version != None and tmp_omodel_ver_target_svn != None and tmp_omodel_ver_target_opk_path != None:
                                 flag_have_info = True
-                            if flag_have_info:
                                 tmp_omodel_ver_target = '%s(%s)' % (
                                     tmp_omodel_ver_target_version,
                                     tmp_omodel_ver_target_svn
                                 )
-                                if tmp_omodel_list_this[1] == tmp_omodel_ver_target:
-                                    tmp_omodel_ver_compare = '=='
-                                elif tmp_omodel_ver_target == 'N/A':
-                                    tmp_omodel_ver_compare = '=×'
-                                plugin_exist_type, plugin_actual_path = find_plugin_path_recursive('./plugin/app', tmp_omodel_list_this[0])
-                                if plugin_exist_type == 'src':
-                                    tmp_omodel_ver_compare = '[SRC]=×'
-                                elif plugin_exist_type == None:
-                                    tmp_omodel_ver_compare = '[DEV]=×'
-                                dictTValue['tMasterOopkNameList'] = '[%s]\n%s %s %s' % (
-                                    tmp_omodel_list_this[0],
-                                    tmp_omodel_list_this[1],
-                                    tmp_omodel_ver_compare,
-                                    tmp_omodel_ver_target
-                                )
-                                flag_done_this = True
-                                while tmp_omodel_ver_compare in ['=>']:
-                                    flag_download = False
-                                    flag_copy = False
-                                    try:
-                                        flag_download = OlivaDiceMaster.webTool.GETHttpFile(
-                                            tmp_omodel_ver_target_opk_path,
-                                            tmp_download_tmp_path
-                                        )
-                                    except:
-                                        flag_download = False
-                                    if not flag_download:
-                                        if flagReply:
-                                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmDownloadFailed'], dictTValue)
-                                            replyMsg(plugin_event, tmp_reply_str)
-                                        else:
-                                            OlivaDiceMaster.data.globalProc.log(3, '模块下载失败!' , [
-                                                ('OlivaDice', 'default'),
-                                                ('autoupdate', 'default')
-                                            ])
-                                        flag_done = False
-                                        flag_done_this = False
-                                        break
-                                    try:
-                                        shutil.copyfile(
-                                            tmp_download_tmp_path,
-                                            tmp_oopm_target_path
-                                        )
-                                        flag_copy = True
-                                    except:
-                                        flag_copy = False
-                                    if not flag_copy:
-                                        if flagReply:
-                                            tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmCopyFailed'], dictTValue)
-                                            replyMsg(plugin_event, tmp_reply_str)
-                                        else:
-                                            OlivaDiceMaster.data.globalProc.log(3, '转移流程中出错!' , [
-                                                ('OlivaDice', 'default'),
-                                                ('autoupdate', 'default')
-                                            ])
-                                        flag_done = False
-                                        flag_done_this = False
-                                        break
-                                    if flagReply:
-                                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmUpdate'], dictTValue)
-                                        replyMsg(plugin_event, tmp_reply_str)
-                                    else:
-                                        OlivaDiceMaster.data.globalProc.log(2, dictTValue['tMasterOopkNameList'] , [
-                                            ('OlivaDice', 'default'),
-                                            ('autoupdate', 'default')
-                                        ])
-                                    flag_need_done = True
-                                    break
-                                if tmp_omodel_ver_compare in ['[SRC]=×']:
-                                    if flagReply:
-                                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmUpdateNotSkipSrc'], dictTValue)
-                                        replyMsg(plugin_event, tmp_reply_str)
-                                    else:
-                                        OlivaDiceMaster.data.globalProc.log(2, dictTValue['tMasterOopkNameList'] , [
-                                            ('OlivaDice', 'default'),
-                                            ('autoupdate', 'default')
-                                        ])
-                                elif tmp_omodel_ver_compare in ['[DEV]=×']:
-                                    if flagReply:
-                                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmUpdateNotSkipDev'], dictTValue)
-                                        replyMsg(plugin_event, tmp_reply_str)
-                                    else:
-                                        OlivaDiceMaster.data.globalProc.log(2, dictTValue['tMasterOopkNameList'] , [
-                                            ('OlivaDice', 'default'),
-                                            ('autoupdate', 'default')
-                                        ])
-                                if not flag_done_this:
-                                    break
+                if not flag_have_info:
+                    tmp_omodel_ver_compare = '=×'
+                elif tmp_omodel_list_this[1] == tmp_omodel_ver_target:
+                    tmp_omodel_ver_compare = '=='
+                elif tmp_omodel_ver_target == 'N/A':
+                    tmp_omodel_ver_compare = '=×'
+                if plugin_exist_type == 'src':
+                    tmp_omodel_ver_compare = '[SRC]=×'
+                elif plugin_exist_type == None:
+                    tmp_omodel_ver_compare = '[DEV]=×'
+                tMasterOopkNameList = '[%s]\n%s %s %s' % (
+                    tmp_omodel_list_this[0],
+                    tmp_omodel_list_this[1],
+                    tmp_omodel_ver_compare,
+                    tmp_omodel_ver_target
+                )
+                update_plan_list.append({
+                    'name': tmp_omodel_list_this[0],
+                    'current_ver': tmp_omodel_list_this[1],
+                    'target_ver': tmp_omodel_ver_target,
+                    'compare': tmp_omodel_ver_compare,
+                    'exist_type': plugin_exist_type,
+                    'download_url': tmp_omodel_ver_target_opk_path,
+                    'download_tmp_path': tmp_download_tmp_path,
+                    'target_path': tmp_oopm_target_path,
+                    'tMasterOopkNameList': tMasterOopkNameList
+                })
+                if plugin_exist_type in ['src', None]:
+                    blocked_update = True
+                    blocked_update_list.append(tmp_omodel_list_this[0])
+            if blocked_update:
+                if flagReply:
+                    dictTValue['tMasterResult'] = '检测到SRC/DEV模式模块[%s]，已取消更新。' % ','.join(blocked_update_list)
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterReply'], dictTValue)
+                    replyMsg(plugin_event, tmp_reply_str)
+                else:
+                    if OlivaDiceMaster.data.globalProc != None:
+                        OlivaDiceMaster.data.globalProc.log(2, '检测到SRC/DEV模式模块[%s]，停止自动更新。' % ','.join(blocked_update_list), [
+                            ('OlivaDice', 'default'),
+                            ('autoupdate', 'default')
+                        ])
+                return
+            # 逐个更新
+            for update_plan in update_plan_list:
+                dictTValue['tMasterOopkNameList'] = update_plan['tMasterOopkNameList']
+
+                if update_plan['compare'] in ['[SRC]=×']:
+                    if flagReply:
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmUpdateNotSkipSrc'], dictTValue)
+                        replyMsg(plugin_event, tmp_reply_str)
+                    else:
+                        OlivaDiceMaster.data.globalProc.log(2, dictTValue['tMasterOopkNameList'] , [
+                            ('OlivaDice', 'default'),
+                            ('autoupdate', 'default')
+                        ])
+                    continue
+                elif update_plan['compare'] in ['[DEV]=×']:
+                    if flagReply:
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmUpdateNotSkipDev'], dictTValue)
+                        replyMsg(plugin_event, tmp_reply_str)
+                    else:
+                        OlivaDiceMaster.data.globalProc.log(2, dictTValue['tMasterOopkNameList'] , [
+                            ('OlivaDice', 'default'),
+                            ('autoupdate', 'default')
+                        ])
+                    continue
+                if update_plan['compare'] not in ['=>']:
+                    continue
+                flag_download = False
+                flag_copy = False
+                try:
+                    flag_download = OlivaDiceMaster.webTool.GETHttpFile(
+                        update_plan['download_url'],
+                        update_plan['download_tmp_path']
+                    )
+                except:
+                    flag_download = False
+                if not flag_download:
+                    if flagReply:
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmDownloadFailed'], dictTValue)
+                        replyMsg(plugin_event, tmp_reply_str)
+                    else:
+                        OlivaDiceMaster.data.globalProc.log(3, '模块下载失败!' , [
+                            ('OlivaDice', 'default'),
+                            ('autoupdate', 'default')
+                        ])
+                    flag_done = False
+                    break
+                try:
+                    shutil.copyfile(
+                        update_plan['download_tmp_path'],
+                        update_plan['target_path']
+                    )
+                    flag_copy = True
+                except:
+                    flag_copy = False
+                if not flag_copy:
+                    if flagReply:
+                        tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmCopyFailed'], dictTValue)
+                        replyMsg(plugin_event, tmp_reply_str)
+                    else:
+                        OlivaDiceMaster.data.globalProc.log(3, '转移流程中出错!' , [
+                            ('OlivaDice', 'default'),
+                            ('autoupdate', 'default')
+                        ])
+                    flag_done = False
+                    break
+                if flagReply:
+                    tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmUpdate'], dictTValue)
+                    replyMsg(plugin_event, tmp_reply_str)
+                else:
+                    OlivaDiceMaster.data.globalProc.log(2, dictTValue['tMasterOopkNameList'] , [
+                        ('OlivaDice', 'default'),
+                        ('autoupdate', 'default')
+                    ])
+                flag_need_done = True
             if flag_done and flag_need_done:
                 if flagReply:
                     tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom['strMasterOopmUpdateAllDone'], dictTValue)
