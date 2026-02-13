@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-"""
+r"""
 _______________________    _________________________________________
 __  __ \__  /____  _/_ |  / /__    |__  __ \___  _/_  ____/__  ____/
 _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
@@ -10,7 +10,7 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 @Author    :   lunzhiPenxil仑质
 @Contact   :   lunzhipenxil@gmail.com
 @License   :   AGPL
-@Copyright :   (C) 2020-2021, OlivOS-Team
+@Copyright :   (C) 2020-2026, OlivOS-Team
 @Desc      :   None
 """
 
@@ -38,19 +38,19 @@ def getCheckAPI(botDict: dict):
                     'http://api.oliva.icu/checkout/?hash=%s&version=%s'
                     % (str(botDict_this), str(OlivaDiceCore.data.OlivaDiceCore_ver_short))
                 )
-            if not flagSkip and webRes == None:
-                if OlivaDiceMaster.data.globalProc != None:
+            if not flagSkip and webRes is None:
+                if OlivaDiceMaster.data.globalProc is not None:
                     OlivaDiceMaster.data.globalProc.log(
                         3, '访问更新检测接口失败!', [('OlivaDice', 'default'), ('autoupdate', 'default')]
                     )
-            if not flagSkip and webRes != None and 'code' in webRes and webRes['code'] == 0:
+            if not flagSkip and webRes is not None and 'code' in webRes and webRes['code'] == 0:
                 if (
                     ('data' in webRes)
                     and ('svn' in webRes['data'])
-                    and (type(webRes['data']['svn']) == int)
+                    and (type(webRes['data']['svn']) is int)
                     and (webRes['data']['svn'] > OlivaDiceCore.data.OlivaDiceCore_svn)
                 ):
-                    if OlivaDiceMaster.data.globalProc != None:
+                    if OlivaDiceMaster.data.globalProc is not None:
                         OlivaDiceMaster.data.globalProc.log(
                             3,
                             '检测到新版本: %s, 即将自动更新' % str(webRes['data']['svn']),
@@ -73,12 +73,12 @@ def getCheckAPI(botDict: dict):
                             flagReply=False,
                         )
                 else:
-                    if OlivaDiceMaster.data.globalProc != None:
+                    if OlivaDiceMaster.data.globalProc is not None:
                         OlivaDiceMaster.data.globalProc.log(
                             2, '当前已为最新版本', [('OlivaDice', 'default'), ('autoupdate', 'default')]
                         )
-        except:
-            if OlivaDiceMaster.data.globalProc != None:
+        except Exception:
+            if OlivaDiceMaster.data.globalProc is not None:
                 OlivaDiceMaster.data.globalProc.log(
                     3,
                     '发生了未曾设想的错误! 但不会影响正常运行~',

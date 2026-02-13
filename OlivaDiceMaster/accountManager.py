@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-"""
+r"""
 _______________________    _________________________________________
 __  __ \__  /____  _/_ |  / /__    |__  __ \___  _/_  ____/__  ____/
 _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
@@ -10,7 +10,7 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 @Author    :   lunzhiPenxil仑质
 @Contact   :   lunzhipenxil@gmail.com
 @License   :   AGPL
-@Copyright :   (C) 2020-2025, OlivOS-Team
+@Copyright :   (C) 2020-2026, OlivOS-Team
 @Desc      :   多账号连接管理模块
 """
 
@@ -48,7 +48,7 @@ def get_bot_display_name(botHash, bot_info, plugin_event=None):
             bot_name = res_data['data'].get('name', '未知')
             if bot_name and bot_name != '未知':
                 return bot_name
-    except:
+    except Exception:
         pass
     # 尝试从用户配置中获取保存的昵称
     try:
@@ -62,7 +62,7 @@ def get_bot_display_name(botHash, bot_info, plugin_event=None):
             )
             if saved_name and saved_name != '用户':
                 bot_name = saved_name
-    except:
+    except Exception:
         pass
     return bot_name
 
@@ -284,7 +284,7 @@ def showAccountInfo(botHash, bot_info_dict, plugin_event=None):
         bot_name = get_bot_display_name(botHash, bot_info_dict[botHash], plugin_event)
         bot_id = bot_info_dict[botHash].id if hasattr(bot_info_dict[botHash], 'id') else '未知'
         result_lines = []
-        result_lines.append(f'=== 账号信息 ===')
+        result_lines.append('=== 账号信息 ===')
         result_lines.append(f'名称: {bot_name}')
         result_lines.append(f'ID: {bot_id}')
         result_lines.append(f'Hash: {botHash}')
@@ -293,19 +293,19 @@ def showAccountInfo(botHash, bot_info_dict, plugin_event=None):
         masterHash = OlivaDiceCore.console.getMasterBotHash(botHash)
         if masterHash:
             # 从账号
-            result_lines.append(f'角色: 从账号')
+            result_lines.append('角色: 从账号')
             master_name = (
                 get_bot_display_name(masterHash, bot_info_dict[masterHash], plugin_event)
                 if masterHash in bot_info_dict
                 else '未知'
             )
             result_lines.append(f'主账号: {master_name} ({masterHash})')
-            result_lines.append(f'数据重定向: 已启用')
+            result_lines.append('数据重定向: 已启用')
         else:
             # 主账号或独立账号
             slaves = relations.get(botHash, [])
             if slaves:
-                result_lines.append(f'角色: 主账号')
+                result_lines.append('角色: 主账号')
                 result_lines.append(f'从账号数量: {len(slaves)}')
                 for slave in slaves:
                     slave_name = (
@@ -315,8 +315,8 @@ def showAccountInfo(botHash, bot_info_dict, plugin_event=None):
                     )
                     result_lines.append(f'  - {slave_name} ({slave})')
             else:
-                result_lines.append(f'角色: 独立账号')
-                result_lines.append(f'主从关系: 未建立')
+                result_lines.append('角色: 独立账号')
+                result_lines.append('主从关系: 未建立')
         return '\n'.join(result_lines)
     except Exception as e:
         return f'获取账号信息失败: {str(e)}'
@@ -408,7 +408,7 @@ def _clearBotHashFromMemory(botHash):
         if hasattr(OlivaDiceCore.pcCard, 'dictPcCardData'):
             if botHash in OlivaDiceCore.pcCard.dictPcCardData:
                 del OlivaDiceCore.pcCard.dictPcCardData[botHash]
-    except Exception as e:
+    except Exception:
         pass
 
 
@@ -443,7 +443,7 @@ def _loadBotHashToMemory(botHash):
                     OlivaDiceCore.pcCard.dataPcCardLoad(botHash, pcHash)
                 except Exception:
                     pass
-    except Exception as e:
+    except Exception:
         pass
 
 
@@ -462,7 +462,7 @@ def importAccountData(sourceBotHash, targetBotHash, Proc, overwrite=False):
         if Proc:
             try:
                 bot_info_dict = Proc.Proc_data.get('bot_info_dict', None)
-            except:
+            except Exception:
                 pass
         if bot_info_dict is not None:
             if sourceBotHash not in bot_info_dict:
@@ -516,7 +516,7 @@ def importAccountDataFromZip(zip_path, targetBotHash, Proc, overwrite=False, sou
         if Proc:
             try:
                 bot_info_dict = Proc.Proc_data.get('bot_info_dict', None)
-            except:
+            except Exception:
                 pass
         if bot_info_dict is not None:
             if targetBotHash not in bot_info_dict:
@@ -562,7 +562,7 @@ def importAccountDataFromZip(zip_path, targetBotHash, Proc, overwrite=False, sou
             # 清理临时目录
             try:
                 shutil.rmtree(temp_dir)
-            except:
+            except Exception:
                 pass
     except Exception as e:
         return False, f'从压缩包导入账号数据失败: {str(e)}', None
@@ -606,7 +606,7 @@ def _copyAndReplaceBotHash(source_dir, target_dir, sourceBotHash, targetBotHash)
                 file_path = os.path.join(root, file)
                 try:
                     os.remove(file_path)
-                except:
+                except Exception:
                     pass
     else:
         os.makedirs(target_dir)
@@ -622,7 +622,7 @@ def _copyAndReplaceBotHash(source_dir, target_dir, sourceBotHash, targetBotHash)
                     json.dump(content, f, ensure_ascii=False, indent=4)
             else:
                 shutil.copy2(content, target_file)
-        except Exception as e:
+        except Exception:
             failed_files.append(file_rel_path)
             continue
     if failed_files:

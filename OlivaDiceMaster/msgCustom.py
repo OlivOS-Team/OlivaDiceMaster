@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-"""
+r"""
 _______________________    _________________________________________
 __  __ \__  /____  _/_ |  / /__    |__  __ \___  _/_  ____/__  ____/
 _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
@@ -10,18 +10,15 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 @Author    :   lunzhiPenxil仑质
 @Contact   :   lunzhipenxil@gmail.com
 @License   :   AGPL
-@Copyright :   (C) 2020-2021, OlivOS-Team
+@Copyright :   (C) 2020-2026, OlivOS-Team
 @Desc      :   None
 """
-
-import OlivOS
-import OlivaDiceCore
-import OlivaDiceMaster
 
 dictConsoleSwitchTemplate = {'default': {'masterAutoUpdate': 1}}
 
 dictStrCustomDict = {}
 
+# flake8: NOQA: E501
 dictStrCustom = {
     'strMasterReply': '{tMasterResult}',
     'strMasterOopmApiFailed': '更新源访问失败',
@@ -70,6 +67,7 @@ dictStrCustom = {
     'strMasterAccountExportSuccess': '数据导出成功：\n{tAccountResult}',
     'strMasterAccountExportFailed': '数据导出失败：\n{tAccountResult}',
 }
+# flake8: NOQA OFF
 
 dictStrConst = {}
 

@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-"""
+r"""
 _______________________    _________________________________________
 __  __ \__  /____  _/_ |  / /__    |__  __ \___  _/_  ____/__  ____/
 _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
@@ -10,7 +10,7 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 @Author    :   lunzhiPenxil仑质
 @Contact   :   lunzhipenxil@gmail.com
 @License   :   AGPL
-@Copyright :   (C) 2020-2021, OlivOS-Team
+@Copyright :   (C) 2020-2026, OlivOS-Team
 @Desc      :   None
 """
 
@@ -37,7 +37,7 @@ def GETHttpJson2Dict(url):
             'GET', send_url, headers=headers, timeout=60, proxies=OlivaDiceCore.webTool.get_system_proxy()
         )
         res = json.loads(msg_res.text)
-    except:
+    except Exception:
         pass
     return res
 
@@ -55,7 +55,7 @@ def GETHttpFile(url, path):
             res = True
         else:
             res = False
-    except:
+    except Exception:
         res = False
     return res
 

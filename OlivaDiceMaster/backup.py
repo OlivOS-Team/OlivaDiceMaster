@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-"""
+r"""
 _______________________    _________________________________________
 __  __ \__  /____  _/_ |  / /__    |__  __ \___  _/_  ____/__  ____/
 _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
@@ -10,11 +10,10 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 @Author    :   lunzhiPenxil仑质
 @Contact   :   lunzhipenxil@gmail.com
 @License   :   AGPL
-@Copyright :   (C) 2020-2021, OlivOS-Team
+@Copyright :   (C) 2020-2026, OlivOS-Team
 @Desc      :   备份功能模块
 """
 
-import OlivOS
 import OlivaDiceCore
 import OlivaDiceMaster
 
@@ -23,7 +22,6 @@ import datetime
 import zipfile
 import threading
 import time
-import shutil
 import re
 
 # 全局变量控制备份线程的停止
@@ -122,7 +120,7 @@ def _getConfigHash():
         # 创建配置字符串并计算哈希
         config_str = f'{start_date}|{pass_day}|{backup_time}|{max_backup_count}|{is_backup}'
         return hash(config_str)
-    except:
+    except Exception:
         return None
 
 
@@ -143,13 +141,13 @@ def _calculateBackupSchedule(Proc):
         # 解析开始日期
         try:
             start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
-        except:
+        except Exception:
             return False, None, False
 
         # 解析备份时间
         try:
             backup_time = datetime.datetime.strptime(backup_time_str, '%H:%M:%S').time()
-        except:
+        except Exception:
             return False, None, False
 
         # 获取当前日期和时间
@@ -197,8 +195,6 @@ def shouldBackupToday(Proc):
     检查今天是否应该进行备份（内存优化版）
     返回: (是否应该备份, 下次备份时间)
     """
-    global _backup_schedule_cache
-
     try:
         current_date = datetime.date.today()
         current_config_hash = _getConfigHash()
@@ -258,7 +254,6 @@ def clearBackupCache():
     """
     清理备份计划缓存，强制下次调用时重新计算
     """
-    global _backup_schedule_cache
     _backup_schedule_cache.update({
         'last_config_hash': None,
         'last_check_date': None,
@@ -273,14 +268,13 @@ def checkConfigChanged():
     轻量级配置变更检查，只检查配置哈希是否变更（内存优化版）
     返回: 配置是否发生变更
     """
-    global _backup_schedule_cache
     try:
         current_config_hash = _getConfigHash()
         result = _backup_schedule_cache['last_config_hash'] != current_config_hash
         # 显式清理局部变量
         del current_config_hash
         return result
-    except:
+    except Exception:
         return True  # 出错时认为配置已变更
 
 
@@ -289,7 +283,6 @@ def getCachedBackupStatus():
     获取缓存中的备份状态信息（只读，不触发计算，内存优化版）
     返回: (是否应该备份, 下次备份时间, 缓存是否有效)
     """
-    global _backup_schedule_cache
     try:
         # 检查缓存是否有效
         if not _backup_schedule_cache['config_valid']:
@@ -312,7 +305,7 @@ def getCachedBackupStatus():
         del current_date
 
         return (result_should_backup, result_next_time, True)
-    except:
+    except Exception:
         return None, None, False
 
 
@@ -496,7 +489,6 @@ def stopBackupSystem(Proc):
     """
     停止备份系统
     """
-    global _backup_thread_stop_event
     _backup_thread_stop_event.set()
     if Proc:
         Proc.log(2, '备份系统停止信号已发送')
@@ -508,7 +500,6 @@ def initBackupSystem(Proc):
     """
     try:
         # 重置停止事件
-        global _backup_thread_stop_event
         _backup_thread_stop_event.clear()
 
         # 初始化备份配置

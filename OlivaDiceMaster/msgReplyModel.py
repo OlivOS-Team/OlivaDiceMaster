@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-"""
+r"""
 _______________________    _________________________________________
 __  __ \__  /____  _/_ |  / /__    |__  __ \___  _/_  ____/__  ____/
 _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
@@ -10,7 +10,7 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 @Author    :   lunzhiPenxil仑质
 @Contact   :   lunzhipenxil@gmail.com
 @License   :   AGPL
-@Copyright :   (C) 2020-2021, OlivOS-Team
+@Copyright :   (C) 2020-2026, OlivOS-Team
 @Desc      :   None
 """
 
@@ -32,7 +32,7 @@ def find_plugin_path_recursive(base_path, namespace, max_depth=10):
             return (None, None)
         try:
             items = os.listdir(current_path)
-        except:
+        except Exception:
             return (None, None)
         opk_file = namespace + '.opk'
         if opk_file in items:
@@ -49,7 +49,7 @@ def find_plugin_path_recursive(base_path, namespace, max_depth=10):
             item_path = os.path.join(current_path, item)
             if os.path.isdir(item_path):
                 result = search_recursive(item_path, current_depth + 1)
-                if result[0] != None:
+                if result[0] is not None:
                     return result
         return (None, None)
 
@@ -90,9 +90,9 @@ def replyOOPM_ShowUpdate_command(
     else:
         tmp_omodel_select = tmp_reast_str
     tmp_api_data = OlivaDiceMaster.webTool.GETHttpJson2Dict(OlivaDiceMaster.data.OlivaDiceMaster_oopm_host)
-    if type(tmp_api_data) == dict:
+    if type(tmp_api_data) is dict:
         if 'model' in tmp_api_data:
-            if type(tmp_api_data['model']) == dict:
+            if type(tmp_api_data['model']) is dict:
                 tmp_api_data_model = tmp_api_data['model']
                 flag_api_ok = True
     tmp_omodel_list = OlivaDiceCore.crossHook.dictHookList['model']
@@ -100,12 +100,12 @@ def replyOOPM_ShowUpdate_command(
     for tmp_omodel_list_this in tmp_omodel_list:
         if tmp_omodel_select.lower() in [tmp_omodel_list_this[0].lower(), 'all']:
             tmp_omodel_list_select.append(tmp_omodel_list_this)
-    if flag_api_ok and flag_type != None and len(tmp_omodel_list_select) > 0:
+    if flag_api_ok and flag_type is not None and len(tmp_omodel_list_select) > 0:
         if flag_type == 'show':
             for tmp_omodel_list_this in tmp_omodel_list_select:
                 tmp_omodel_ver_target = 'N/A'
                 tmp_omodel_ver_compare = '=>'
-                if tmp_api_data_model != None:
+                if tmp_api_data_model is not None:
                     if tmp_omodel_list_this[0] in tmp_api_data_model:
                         if tmp_model_branch_select in tmp_api_data_model[tmp_omodel_list_this[0]]:
                             tmp_omodel_ver_target_version = None
@@ -118,7 +118,7 @@ def replyOOPM_ShowUpdate_command(
                                 tmp_omodel_ver_target_svn = tmp_api_data_model[tmp_omodel_list_this[0]][
                                     tmp_model_branch_select
                                 ]['svn']
-                            if tmp_omodel_ver_target_version != None and tmp_omodel_ver_target_svn != None:
+                            if tmp_omodel_ver_target_version is not None and tmp_omodel_ver_target_svn is not None:
                                 tmp_omodel_ver_target = '%s(%s)' % (
                                     tmp_omodel_ver_target_version,
                                     tmp_omodel_ver_target_svn,
@@ -130,7 +130,7 @@ def replyOOPM_ShowUpdate_command(
                     tmp_omodel_ver_compare = '=×'
                 if plugin_exist_type == 'src':
                     tmp_omodel_ver_compare = '[SRC]=×'
-                elif plugin_exist_type == None:
+                elif plugin_exist_type is None:
                     tmp_omodel_ver_compare = '[DEV]=×'
                 tmp_reply_str_1_list.append(
                     '[%s]\n%s %s %s'
@@ -159,7 +159,7 @@ def replyOOPM_ShowUpdate_command(
                 plugin_exist_type, plugin_actual_path = find_plugin_path_recursive(
                     './plugin/app', tmp_omodel_list_this[0]
                 )
-                if plugin_exist_type == 'opk' and plugin_actual_path != None:
+                if plugin_exist_type == 'opk' and plugin_actual_path is not None:
                     tmp_oopm_target_path = plugin_actual_path
                 else:
                     tmp_oopm_target_path = './plugin/app/%s.opk' % tmp_omodel_list_this[0]
@@ -167,7 +167,7 @@ def replyOOPM_ShowUpdate_command(
                     OlivaDiceCore.data.dataDirRoot,
                     tmp_omodel_list_this[0],
                 )
-                if tmp_api_data_model != None:
+                if tmp_api_data_model is not None:
                     if tmp_omodel_list_this[0] in tmp_api_data_model:
                         if tmp_model_branch_select in tmp_api_data_model[tmp_omodel_list_this[0]]:
                             tmp_omodel_ver_target_version = None
@@ -185,9 +185,9 @@ def replyOOPM_ShowUpdate_command(
                                     tmp_model_branch_select
                                 ]['opk_path']
                             if (
-                                tmp_omodel_ver_target_version != None
-                                and tmp_omodel_ver_target_svn != None
-                                and tmp_omodel_ver_target_opk_path != None
+                                tmp_omodel_ver_target_version is not None
+                                and tmp_omodel_ver_target_svn is not None
+                                and tmp_omodel_ver_target_opk_path is not None
                             ):
                                 flag_have_info = True
                                 tmp_omodel_ver_target = '%s(%s)' % (
@@ -202,7 +202,7 @@ def replyOOPM_ShowUpdate_command(
                     tmp_omodel_ver_compare = '=×'
                 if plugin_exist_type == 'src':
                     tmp_omodel_ver_compare = '[SRC]=×'
-                elif plugin_exist_type == None:
+                elif plugin_exist_type is None:
                     tmp_omodel_ver_compare = '[DEV]=×'
                 tMasterOopkNameList = '[%s]\n%s %s %s' % (
                     tmp_omodel_list_this[0],
@@ -234,7 +234,7 @@ def replyOOPM_ShowUpdate_command(
                     )
                     replyMsg(plugin_event, tmp_reply_str)
                 else:
-                    if OlivaDiceMaster.data.globalProc != None:
+                    if OlivaDiceMaster.data.globalProc is not None:
                         OlivaDiceMaster.data.globalProc.log(
                             2,
                             '检测到SRC/DEV模式模块[%s]，停止自动更新。' % ','.join(blocked_update_list),
@@ -275,7 +275,7 @@ def replyOOPM_ShowUpdate_command(
                     flag_download = OlivaDiceMaster.webTool.GETHttpFile(
                         update_plan['download_url'], update_plan['download_tmp_path']
                     )
-                except:
+                except Exception:
                     flag_download = False
                 if not flag_download:
                     if flagReply:
@@ -292,7 +292,7 @@ def replyOOPM_ShowUpdate_command(
                 try:
                     shutil.copyfile(update_plan['download_tmp_path'], update_plan['target_path'])
                     flag_copy = True
-                except:
+                except Exception:
                     flag_copy = False
                 if not flag_copy:
                     if flagReply:
