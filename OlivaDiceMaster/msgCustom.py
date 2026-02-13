@@ -1,10 +1,10 @@
 # -*- encoding: utf-8 -*-
-'''
+"""
 _______________________    _________________________________________
 __  __ \__  /____  _/_ |  / /__    |__  __ \___  _/_  ____/__  ____/
-_  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/   
-/ /_/ /_  /____/ /  __ |/ / _  ___ |  /_/ /__/ /  / /___  _  /___   
-\____/ /_____/___/  _____/  /_/  |_/_____/ /___/  \____/  /_____/   
+_  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
+/ /_/ /_  /____/ /  __ |/ / _  ___ |  /_/ /__/ /  / /___  _  /___
+\____/ /_____/___/  _____/  /_/  |_/_____/ /___/  \____/  /_____/
 
 @File      :   msgCustom.py
 @Author    :   lunzhiPenxil仑质
@@ -12,17 +12,13 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 @License   :   AGPL
 @Copyright :   (C) 2020-2021, OlivOS-Team
 @Desc      :   None
-'''
+"""
 
 import OlivOS
 import OlivaDiceCore
 import OlivaDiceMaster
 
-dictConsoleSwitchTemplate = {
-    'default' : {
-        'masterAutoUpdate': 1
-    }
-}
+dictConsoleSwitchTemplate = {'default': {'masterAutoUpdate': 1}}
 
 dictStrCustomDict = {}
 
@@ -75,11 +71,9 @@ dictStrCustom = {
     'strMasterAccountExportFailed': '数据导出失败：\n{tAccountResult}',
 }
 
-dictStrConst = {
-}
+dictStrConst = {}
 
-dictGValue = {
-}
+dictGValue = {}
 
 dictTValue = {
     'tMasterResult': 'N/A',
@@ -90,41 +84,37 @@ dictTValue = {
     'tBackupResult': 'N/A',
     'tConfigKey': 'N/A',
     'tConfigValue': 'N/A',
-    'tAccountResult': 'N/A'
+    'tAccountResult': 'N/A',
 }
 
 dictHelpDocTemp = {
-    'OlivaDiceMaster': '''[OlivaDiceMaster]
+    'OlivaDiceMaster': """[OlivaDiceMaster]
 OlivaDice大师模块
 本模块为青果跑团掷骰机器人(OlivaDice)大师模块，集成与跑团无关的骰主管理功能功能（如指令更新等）。
 核心开发者: lunzhiPenxil仑质
-注: 本模块为可选重要模块。''',
-
-    'oopm': '''青果包管理:
+注: 本模块为可选重要模块。""",
+    'oopm': """青果包管理:
 本指令可以用于远程更新插件
 .oopm update 自动检查并更新全部插件
 .oopm update [插件名称] 更新特定插件
 .oopm show [插件名称] 检查插件更新状态
 .oopm list 查看所有可选模块
-.oopm get [插件名称] 获取所选模块''',
-
-    'send': '''send反馈发送:
+.oopm get [插件名称] 获取所选模块""",
+    'send': """send反馈发送:
 对于普通用户
 .send [反馈消息] 发送反馈消息给Master
 
 对于骰主
 .send [回复消息] 发送消息到当前窗口
-.send (user/group) [ID] [回复消息] 发送消息到指定窗口''',
-
-    'groupclear': '''指令清群:
+.send (user/group) [ID] [回复消息] 发送消息到指定窗口""",
+    'groupclear': """指令清群:
 .group clear [天数] 查找超过对应天数未触发的多人聊天
 .group clear do [天数] (自定义消息) 清理超过对应天数未触发的多人聊天
 .group clear off 查找bot off的多人聊天
 .group clear do off (自定义消息) 清理bot off的多人聊天
 
-注：自定义消息为可选参数，如不提供则使用默认退群消息''',
-
-    'backup': '''数据备份:
+注：自定义消息为可选参数，如不提供则使用默认退群消息""",
+    'backup': """数据备份:
 .backup 查看备份配置和状态
 .backup start 手动触发数据备份
 .backup change 配置项 配置值 修改备份配置
@@ -138,9 +128,8 @@ OlivaDice大师模块
 - maxBackupCount: 最大备份数量 (整数)
 
 数据备份路径：./plugin/backup
-备份文件格式: data_yyyy-MM-dd_HH-mm-ss.zip''',
-
-    'account': '''多账号连接管理:
+备份文件格式: data_yyyy-MM-dd_HH-mm-ss.zip""",
+    'account': """多账号连接管理:
 .account link [从账号Hash] [主账号Hash] - 建立主从关系
   从账号和主账号可用空格、分号、逗号分隔
   系统会自动检测循环依赖并阻止
@@ -167,13 +156,12 @@ OlivaDice大师模块
 
 .account export (账号Hash) - 导出账号数据
   不指定Hash时，导出当前账号的数据
-  将指定账号的数据导出到压缩包（默认路径：./plugin/export）''',
-
+  将指定账号的数据导出到压缩包（默认路径：./plugin/export）""",
     '指令更新': '&oopm',
     '反馈发送': '&send',
     '数据备份': '&backup',
     '备份': '&backup',
     '指令清群': '&groupclear',
     '多账号连接': '&account',
-    '账号管理': '&account'
+    '账号管理': '&account',
 }
