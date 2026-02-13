@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=63.2.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "olivos-plugin-OlivaDiceMaster"
+version = "3.0.27"
+description = "本模块为OlivaDice的大师模块，提供了更高级的骰主管理功能，其中的功能可能不是必须的，但是却是强大的，这些功能包括但不限于更新和安装新的模块。"
+readme = "README.md"
+requires-python = ">=3.7"
+authors = [
+    {name = "OlivOS-Team", email = "benzenpenxil@foxmail.com"}
+]
+license = {text = "AGPLv3 License"}
+classifiers = [
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    "olivos",
+]
+
+[project.urls]
+Homepage = "https://wiki.dice.center/"
+Repository = "https://github.com/OlivOS-Team/OlivaDiceMaster"
+Issues = "https://github.com/OlivOS-Team/OlivaDiceMaster/issues"
