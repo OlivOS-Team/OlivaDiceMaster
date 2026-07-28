@@ -14,8 +14,8 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 @Desc      :   None
 """
 
-OlivaDiceMaster_ver = '3.0.27'
-OlivaDiceMaster_svn = 28
+OlivaDiceMaster_ver = '3.0.28'
+OlivaDiceMaster_svn = 29
 OlivaDiceMaster_ver_short = '%s(%s)' % (str(OlivaDiceMaster_ver), str(OlivaDiceMaster_svn))
 
 OlivaDiceMaster_oopm_host = 'https://api.dice.center/OlivaDiceVer'
