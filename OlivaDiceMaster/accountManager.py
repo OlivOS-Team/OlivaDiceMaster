@@ -79,7 +79,10 @@ def get_bot_display_names(bot_info_dict, bot_hashes=None, plugin_event=None):
         return {}
 
     def fetch_name(bot_hash):
-        return bot_hash, get_bot_display_name(bot_hash, bot_info_dict[bot_hash], plugin_event)
+        try:
+            return bot_hash, get_bot_display_name(bot_hash, bot_info_dict[bot_hash], plugin_event)
+        except Exception:
+            return bot_hash, '未知'
 
     max_workers = min(32, len(bot_hashes))
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
