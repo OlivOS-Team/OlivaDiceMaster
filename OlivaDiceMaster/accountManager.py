@@ -14,17 +14,19 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 @Desc      :   多账号连接管理模块
 """
 
-import OlivOS
-import OlivaDiceCore
-import OlivaDiceMaster
-
-import os
-import json
-import shutil
-import re
-import zipfile
-import tempfile
 import copy
+import json
+import os
+import re
+import shutil
+import tempfile
+import zipfile
+from concurrent.futures import ThreadPoolExecutor
+
+import OlivaDiceCore
+import OlivOS
+
+import OlivaDiceMaster
 
 
 def get_bot_display_name(botHash, bot_info, plugin_event=None):
@@ -65,6 +67,26 @@ def get_bot_display_name(botHash, bot_info, plugin_event=None):
     except Exception:
         pass
     return bot_name
+
+
+def get_bot_display_names(bot_info_dict, bot_hashes=None, plugin_event=None):
+    """并发获取账号昵称，同一批次内每个账号只请求一次。"""
+    if bot_hashes is None:
+        bot_hashes = list(bot_info_dict)
+    else:
+        bot_hashes = [bot_hash for bot_hash in dict.fromkeys(bot_hashes) if bot_hash in bot_info_dict]
+    if not bot_hashes:
+        return {}
+
+    def fetch_name(bot_hash):
+        try:
+            return bot_hash, get_bot_display_name(bot_hash, bot_info_dict[bot_hash], plugin_event)
+        except Exception:
+            return bot_hash, '未知'
+
+    max_workers = min(32, len(bot_hashes))
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        return dict(executor.map(fetch_name, bot_hashes))
 
 
 def checkCircularDependency(slaveBotHash, masterBotHash, relations):
@@ -236,19 +258,16 @@ def listAccountRelations(bot_info_dict, plugin_event=None):
         result_lines.append('=== 账号列表 ===')
         # relations 已经是 master_to_slaves 格式
         master_to_slaves = relations
+        bot_names = get_bot_display_names(bot_info_dict, plugin_event=plugin_event)
         # 遍历所有账号
         for botHash in bot_info_dict:
-            bot_name = get_bot_display_name(botHash, bot_info_dict[botHash], plugin_event)
+            bot_name = bot_names.get(botHash, '未知')
             bot_id = bot_info_dict[botHash].id if hasattr(bot_info_dict[botHash], 'id') else '未知'
             # 检查账号角色
             masterHash = OlivaDiceCore.console.getMasterBotHash(botHash)
             if masterHash:
                 # 从账号
-                master_name = (
-                    get_bot_display_name(masterHash, bot_info_dict[masterHash], plugin_event)
-                    if masterHash in bot_info_dict
-                    else '未知'
-                )
+                master_name = bot_names.get(masterHash, '未知')
                 result_lines.append(f'[从账号] {bot_name}({bot_id})')
                 result_lines.append(f'  Hash: {botHash}')
                 result_lines.append(f'  主账号: {master_name} ({masterHash})')
@@ -258,11 +277,7 @@ def listAccountRelations(bot_info_dict, plugin_event=None):
                 result_lines.append(f'  Hash: {botHash}')
                 result_lines.append(f'  从账号数量: {len(master_to_slaves[botHash])}')
                 for slave in master_to_slaves[botHash]:
-                    slave_name = (
-                        get_bot_display_name(slave, bot_info_dict[slave], plugin_event)
-                        if slave in bot_info_dict
-                        else '未知'
-                    )
+                    slave_name = bot_names.get(slave, '未知')
                     result_lines.append(f'    - {slave_name} ({slave})')
             else:
                 # 独立账号
@@ -281,38 +296,36 @@ def showAccountInfo(botHash, bot_info_dict, plugin_event=None):
     try:
         if botHash not in bot_info_dict:
             return f'未找到账号: {botHash}'
-        bot_name = get_bot_display_name(botHash, bot_info_dict[botHash], plugin_event)
         bot_id = bot_info_dict[botHash].id if hasattr(bot_info_dict[botHash], 'id') else '未知'
+        # 检查主从关系
+        relations = OlivaDiceCore.console.getAllAccountRelations()
+        masterHash = OlivaDiceCore.console.getMasterBotHash(botHash)
+        slaves = relations.get(botHash, []) if not masterHash else []
+        related_hashes = [botHash]
+        if masterHash:
+            related_hashes.append(masterHash)
+        else:
+            related_hashes.extend(slaves)
+        bot_names = get_bot_display_names(bot_info_dict, related_hashes, plugin_event)
+        bot_name = bot_names.get(botHash, '未知')
         result_lines = []
         result_lines.append('=== 账号信息 ===')
         result_lines.append(f'名称: {bot_name}')
         result_lines.append(f'ID: {bot_id}')
         result_lines.append(f'Hash: {botHash}')
-        # 检查主从关系
-        relations = OlivaDiceCore.console.getAllAccountRelations()
-        masterHash = OlivaDiceCore.console.getMasterBotHash(botHash)
         if masterHash:
             # 从账号
             result_lines.append('角色: 从账号')
-            master_name = (
-                get_bot_display_name(masterHash, bot_info_dict[masterHash], plugin_event)
-                if masterHash in bot_info_dict
-                else '未知'
-            )
+            master_name = bot_names.get(masterHash, '未知')
             result_lines.append(f'主账号: {master_name} ({masterHash})')
             result_lines.append('数据重定向: 已启用')
         else:
             # 主账号或独立账号
-            slaves = relations.get(botHash, [])
             if slaves:
                 result_lines.append('角色: 主账号')
                 result_lines.append(f'从账号数量: {len(slaves)}')
                 for slave in slaves:
-                    slave_name = (
-                        get_bot_display_name(slave, bot_info_dict[slave], plugin_event)
-                        if slave in bot_info_dict
-                        else '未知'
-                    )
+                    slave_name = bot_names.get(slave, '未知')
                     result_lines.append(f'  - {slave_name} ({slave})')
             else:
                 result_lines.append('角色: 独立账号')
