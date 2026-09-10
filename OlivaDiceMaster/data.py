@@ -18,7 +18,7 @@ OlivaDiceMaster_ver = '3.0.31'
 OlivaDiceMaster_svn = 32
 OlivaDiceMaster_ver_short = '%s(%s)' % (str(OlivaDiceMaster_ver), str(OlivaDiceMaster_svn))
 
-OlivaDiceMaster_oopm_host = 'https://api.dice.center/OlivaDiceVer'
+OlivaDiceMaster_oopm_host = 'http://api.dice.center/OlivaDiceVer'
 
 globalProc = None
 
