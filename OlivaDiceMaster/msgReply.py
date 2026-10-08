@@ -202,21 +202,28 @@ def unity_reply(plugin_event, Proc):
                 )
             elif isMatchWordStart(tmp_reast_str, 'list', fullMatch=True):
                 tmp_api_data = OlivaDiceMaster.webTool.GETHttpJson2Dict(OlivaDiceMaster.data.OlivaDiceMaster_oopm_host)
-                if tmp_api_data is not None:
-                    tmp_model_list = []
-                    if 'model' in tmp_api_data:
-                        for tmp_api_data_model_this in tmp_api_data['model']:
-                            tmp_api_data_model = tmp_api_data['model'][tmp_api_data_model_this]
-                            tmp_api_data_model_branch = 'main'
-                            if 'command' in tmp_api_data_model[tmp_api_data_model_branch]:
-                                tmp_model_list.append(
-                                    '[%s] - %s(%s)'
-                                    % (
-                                        tmp_api_data_model[tmp_api_data_model_branch]['command'],
-                                        str(tmp_api_data_model[tmp_api_data_model_branch]['version']),
-                                        str(tmp_api_data_model[tmp_api_data_model_branch]['svn']),
-                                    )
-                                )
+                tmp_api_data_model = None
+                if type(tmp_api_data) is dict and type(tmp_api_data.get('model')) is dict:
+                    tmp_api_data_model = tmp_api_data['model']
+                tmp_model_list = []
+                tmp_omodel_list = OlivaDiceCore.crossHook.dictHookList.get('model', [])
+                if type(tmp_omodel_list) is list:
+                    for tmp_omodel_list_this in tmp_omodel_list:
+                        if not (
+                            isinstance(tmp_omodel_list_this, (list, tuple)) and len(tmp_omodel_list_this) >= 2
+                        ):
+                            continue
+                        tmp_model_name = tmp_omodel_list_this[0]
+                        tmp_model_local_ver = tmp_omodel_list_this[1]
+                        tmp_model_remote_ver = OlivaDiceMaster.msgReplyModel.getOopmRemoteVersion(
+                            tmp_api_data_model, tmp_model_name
+                        )
+                        tmp_model_list.append(
+                            OlivaDiceMaster.msgReplyModel.formatOopmListLine(
+                                tmp_model_name, tmp_model_local_ver, tmp_model_remote_ver
+                            )
+                        )
+                if tmp_model_list:
                     tmp_reply_str_1 = '可选模块如下:\n%s' % '\n'.join(tmp_model_list)
                     dictTValue['tMasterResult'] = tmp_reply_str_1
                     tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(
