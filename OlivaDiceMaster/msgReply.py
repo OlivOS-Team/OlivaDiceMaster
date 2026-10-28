@@ -28,14 +28,17 @@ def unity_init(plugin_event, Proc):
     pass
 
 
-def getSendResultFlagDefault(send_result):
-    # 兼容未提供 getSendResultFlag 的旧版 OlivaDiceCore
-    if not isinstance(send_result, list):
-        send_result = [send_result]
-    for send_result_this in send_result:
+def getSendResultStatusDefault(send_result):
+    # 兼容未提供 getSendResultStatus 的旧版 OlivaDiceCore
+    send_result_list = send_result
+    if not isinstance(send_result_list, list):
+        send_result_list = [send_result_list]
+    for send_result_this in send_result_list:
         if isinstance(send_result_this, dict) and send_result_this.get('active', True) is False:
-            return False
-    return True
+            return 'failed'
+    if getattr(send_result, 'flag_truncated', False):
+        return 'partial'
+    return 'success'
 
 
 def data_init(plugin_event, Proc):
@@ -54,7 +57,7 @@ def unity_reply(plugin_event, Proc):
     dictTValue = OlivaDiceCore.msgCustomManager.dictTValueInit(plugin_event, dictTValue)
 
     sendMsgByEvent = OlivaDiceCore.msgReply.sendMsgByEvent
-    getSendResultFlag = getattr(OlivaDiceCore.msgReply, 'getSendResultFlag', getSendResultFlagDefault)
+    getSendResultStatus = getattr(OlivaDiceCore.msgReply, 'getSendResultStatus', getSendResultStatusDefault)
     replyMsg = OlivaDiceCore.msgReply.replyMsg
     replyMsgLazyHelpByEvent = OlivaDiceCore.msgReply.replyMsgLazyHelpByEvent
     isMatchWordStart = OlivaDiceCore.msgReply.isMatchWordStart
@@ -371,8 +374,17 @@ def unity_reply(plugin_event, Proc):
                     dictTValue['tMasterSendTargetType'] = '群'
                 else:
                     dictTValue['tMasterSendTargetType'] = '用户'
-                if getSendResultFlag(tmp_send_res):
+                dictTValue['tMasterSendPageTotal'] = str(getattr(tmp_send_res, 'page_total', 'N/A'))
+                dictTValue['tMasterSendPageSent'] = str(
+                    len(tmp_send_res) if isinstance(tmp_send_res, list) else 'N/A'
+                )
+                tmp_send_status = getSendResultStatus(tmp_send_res)
+                if tmp_send_status == 'success':
                     tmp_reply_key = 'strMasterSendFromMasterSuccess'
+                elif tmp_send_status == 'partial' and flag_target_type == 'group':
+                    tmp_reply_key = 'strMasterSendFromMasterPartialGroup'
+                elif tmp_send_status == 'partial':
+                    tmp_reply_key = 'strMasterSendFromMasterPartialUser'
                 elif flag_target_type == 'group':
                     tmp_reply_key = 'strMasterSendFromMasterFailedGroup'
                 else:
