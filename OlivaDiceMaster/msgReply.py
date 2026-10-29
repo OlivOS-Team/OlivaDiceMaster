@@ -20,7 +20,6 @@ import OlivaDiceCore
 
 import time
 import shutil
-import os
 import re
 
 
@@ -270,7 +269,20 @@ def unity_reply(plugin_event, Proc):
                                         OlivaDiceCore.data.dataDirRoot,
                                         tmp_api_model_name,
                                     )
-                                    tmp_oopm_target_path = './plugin/app/%s.opk' % tmp_api_model_name
+                                    # 已装在子文件夹里的 opk 原地覆盖，避免根目录再装一份
+                                    (
+                                        tmp_plugin_exist_type,
+                                        tmp_plugin_actual_path,
+                                    ) = OlivaDiceMaster.msgReplyModel.find_plugin_path_recursive(
+                                        OlivaDiceMaster.data.pluginAppDir, tmp_api_model_name
+                                    )
+                                    if tmp_plugin_exist_type == 'opk' and tmp_plugin_actual_path is not None:
+                                        tmp_oopm_target_path = tmp_plugin_actual_path
+                                    else:
+                                        tmp_oopm_target_path = '%s/%s.opk' % (
+                                            OlivaDiceMaster.data.pluginAppDir,
+                                            tmp_api_model_name,
+                                        )
                                     dictTValue['tMasterOopkNameList'] = tmp_api_data_model_this
                                     if 'version' in tmp_api_data_model[tmp_api_data_model_branch]:
                                         dictTValue['tMasterOopkNameList'] += ' ' + str(
@@ -280,7 +292,7 @@ def unity_reply(plugin_event, Proc):
                                         dictTValue['tMasterOopkNameList'] += (
                                             '(' + str(tmp_api_data_model[tmp_api_data_model_branch]['svn']) + ')'
                                         )
-                                    if os.path.exists(tmp_oopm_target_path[:-4]):
+                                    if tmp_plugin_exist_type == 'src':
                                         tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(
                                             dictStrCustom['strMasterOopmGetSkipSrc'], dictTValue
                                         )

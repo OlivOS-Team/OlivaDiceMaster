@@ -154,7 +154,9 @@ def replyOOPM_ShowUpdate_command(
                                 tmp_omodel_ver_target_version,
                                 tmp_omodel_ver_target_svn,
                             )
-            plugin_exist_type, plugin_path = find_plugin_path_recursive('./plugin/app', tmp_omodel_list_this[0])
+            plugin_exist_type, plugin_path = find_plugin_path_recursive(
+                OlivaDiceMaster.data.pluginAppDir, tmp_omodel_list_this[0]
+            )
             if tmp_omodel_list_this[1] == tmp_omodel_ver_target:
                 tmp_omodel_ver_compare = '=='
             elif tmp_omodel_ver_target == 'N/A':
@@ -188,12 +190,12 @@ def replyOOPM_ShowUpdate_command(
             flag_have_info = False
             # 查找插件的实际位置，确定正确的目标路径
             plugin_exist_type, plugin_actual_path = find_plugin_path_recursive(
-                './plugin/app', tmp_omodel_list_this[0]
+                OlivaDiceMaster.data.pluginAppDir, tmp_omodel_list_this[0]
             )
             if plugin_exist_type == 'opk' and plugin_actual_path is not None:
                 tmp_oopm_target_path = plugin_actual_path
             else:
-                tmp_oopm_target_path = './plugin/app/%s.opk' % tmp_omodel_list_this[0]
+                tmp_oopm_target_path = '%s/%s.opk' % (OlivaDiceMaster.data.pluginAppDir, tmp_omodel_list_this[0])
             tmp_download_tmp_path = '%s/unity/update/%s.opk' % (
                 OlivaDiceCore.data.dataDirRoot,
                 tmp_omodel_list_this[0],
