@@ -14,8 +14,8 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 @Desc      :   None
 """
 
-OlivaDiceMaster_ver = '3.0.33'
-OlivaDiceMaster_svn = 34
+OlivaDiceMaster_ver = '3.0.34'
+OlivaDiceMaster_svn = 35
 OlivaDiceMaster_ver_short = '%s(%s)' % (str(OlivaDiceMaster_ver), str(OlivaDiceMaster_svn))
 
 OlivaDiceMaster_oopm_host = 'http://api.dice.center/OlivaDiceVer'
@@ -23,5 +23,8 @@ OlivaDiceMaster_oopm_host = 'http://api.dice.center/OlivaDiceVer'
 globalProc = None
 
 backupPath = './plugin/data/'
+
+# OlivOS 插件目录，.oopm 安装/更新时在其中递归查找已有插件（支持子文件夹）
+pluginAppDir = './plugin/app'
 
 exportPath = './plugin/export'
