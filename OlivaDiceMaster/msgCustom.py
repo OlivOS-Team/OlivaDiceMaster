@@ -38,6 +38,11 @@ dictStrCustom = {
     'strMasterSendFromMaster': '来自Master的消息：\n{tResult}',
     'strMasterSendToMaster': '[{tGroupName}]({tGroupId})中[{tUserName}]({tUserId})发来的消息：\n{tResult}',
     'strMasterSendToMasterAlready': '已将消息发送至Master',
+    'strMasterSendFromMasterSuccess': '向{tMasterSendTargetType}[{tMasterSendTargetId}]发送消息成功',
+    'strMasterSendFromMasterFailedUser': '向用户[{tMasterSendTargetId}]发送消息失败，可能是没有对方好友或没有权限',
+    'strMasterSendFromMasterFailedGroup': '向群[{tMasterSendTargetId}]发送消息失败，可能是不在该群或没有权限',
+    'strMasterSendFromMasterPartialUser': '向用户[{tMasterSendTargetId}]发送消息部分成功，已发送{tMasterSendPageSent}/{tMasterSendPageTotal}页，超出分页上限的部分未发送',
+    'strMasterSendFromMasterPartialGroup': '向群[{tMasterSendTargetId}]发送消息部分成功，已发送{tMasterSendPageSent}/{tMasterSendPageTotal}页，超出分页上限的部分未发送',
     'strMasterTrustSet': '[{tName}]({tId})的{tMasterTrustName}已设置为：{tResult}',
     'strMasterTrustGet': '[{tName}]({tId})的{tMasterTrustName}为：{tResult}',
     'strMasterPlatformNo': '该功能在此平台不受支持',
@@ -83,6 +88,10 @@ dictTValue = {
     'tConfigKey': 'N/A',
     'tConfigValue': 'N/A',
     'tAccountResult': 'N/A',
+    'tMasterSendTargetType': 'N/A',
+    'tMasterSendTargetId': 'N/A',
+    'tMasterSendPageSent': 'N/A',
+    'tMasterSendPageTotal': 'N/A',
 }
 
 dictHelpDocTemp = {

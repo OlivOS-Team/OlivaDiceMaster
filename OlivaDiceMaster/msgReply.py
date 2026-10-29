@@ -28,6 +28,19 @@ def unity_init(plugin_event, Proc):
     pass
 
 
+def getSendResultStatusDefault(send_result):
+    # 兼容未提供 getSendResultStatus 的旧版 OlivaDiceCore
+    send_result_list = send_result
+    if not isinstance(send_result_list, list):
+        send_result_list = [send_result_list]
+    for send_result_this in send_result_list:
+        if isinstance(send_result_this, dict) and send_result_this.get('active', True) is False:
+            return 'failed'
+    if getattr(send_result, 'flag_truncated', False):
+        return 'partial'
+    return 'success'
+
+
 def data_init(plugin_event, Proc):
     OlivaDiceMaster.msgCustomManager.initMsgCustom(Proc.Proc_data['bot_info_dict'])
     OlivaDiceMaster.webAPI.init_getCheckAPI(Proc.Proc_data['bot_info_dict'])
@@ -44,6 +57,7 @@ def unity_reply(plugin_event, Proc):
     dictTValue = OlivaDiceCore.msgCustomManager.dictTValueInit(plugin_event, dictTValue)
 
     sendMsgByEvent = OlivaDiceCore.msgReply.sendMsgByEvent
+    getSendResultStatus = getattr(OlivaDiceCore.msgReply, 'getSendResultStatus', getSendResultStatusDefault)
     replyMsg = OlivaDiceCore.msgReply.replyMsg
     replyMsgLazyHelpByEvent = OlivaDiceCore.msgReply.replyMsgLazyHelpByEvent
     isMatchWordStart = OlivaDiceCore.msgReply.isMatchWordStart
@@ -348,7 +362,35 @@ def unity_reply(plugin_event, Proc):
                 tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(
                     dictStrCustom['strMasterSendFromMaster'], dictTValue
                 )
-                sendMsgByEvent(plugin_event, tmp_reply_str, tmp_target_id, flag_target_type, host_id=tmp_target_host_id)
+                tmp_send_res = sendMsgByEvent(
+                    plugin_event, tmp_reply_str, tmp_target_id, flag_target_type, host_id=tmp_target_host_id
+                )
+                # 向骰主反馈本次发送是否成功
+                if tmp_target_host_id is not None:
+                    dictTValue['tMasterSendTargetId'] = '%s|%s' % (str(tmp_target_host_id), str(tmp_target_id))
+                else:
+                    dictTValue['tMasterSendTargetId'] = str(tmp_target_id)
+                if flag_target_type == 'group':
+                    dictTValue['tMasterSendTargetType'] = '群'
+                else:
+                    dictTValue['tMasterSendTargetType'] = '用户'
+                dictTValue['tMasterSendPageTotal'] = str(getattr(tmp_send_res, 'page_total', 'N/A'))
+                dictTValue['tMasterSendPageSent'] = str(
+                    len(tmp_send_res) if isinstance(tmp_send_res, list) else 'N/A'
+                )
+                tmp_send_status = getSendResultStatus(tmp_send_res)
+                if tmp_send_status == 'success':
+                    tmp_reply_key = 'strMasterSendFromMasterSuccess'
+                elif tmp_send_status == 'partial' and flag_target_type == 'group':
+                    tmp_reply_key = 'strMasterSendFromMasterPartialGroup'
+                elif tmp_send_status == 'partial':
+                    tmp_reply_key = 'strMasterSendFromMasterPartialUser'
+                elif flag_target_type == 'group':
+                    tmp_reply_key = 'strMasterSendFromMasterFailedGroup'
+                else:
+                    tmp_reply_key = 'strMasterSendFromMasterFailedUser'
+                tmp_reply_str = OlivaDiceCore.msgCustomManager.formatReplySTR(dictStrCustom[tmp_reply_key], dictTValue)
+                replyMsg(plugin_event, tmp_reply_str)
             else:
                 tmp_reply_str = tmp_send_result
                 replyMsg(plugin_event, tmp_reply_str)
